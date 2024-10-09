@@ -9,7 +9,10 @@
 #include <stdbool.h>
 #include "definitions.h"
 #include "utils/constants.h"
-#include "utils/menus.h"
+#include "utils/menus/user_login_menu.h"
+#include "utils/menus/admin_menu.h"
+#include "models/response_model.h"
+#include "models/user_auth_model.h"
 
 int main() {
     struct sockaddr_in server;   
@@ -24,21 +27,32 @@ int main() {
 
     connect(sd, (struct sockaddr *)(&server), sizeof(server));
 
+
     bool flag = true;
-    const char* displayUL = displayUserLogin();  
+    UserModel user;
+    const char* displayUL = displayUserLogin();
+    const char* displayAM = displayAdminMenu();  
     do {
         // Clear the buffer before reusing it
         memset(buffer, 0, sizeof(buffer));
         read(sd, buffer, sizeof(buffer));
         // printf("%s", buffer);
         if(strcmp(buffer, displayUL) == 0){
-            UserModel userLogin = userLoginMenu();
+            user = userLoginMenu();
             
-            write(sd, &userLogin, sizeof(userLogin));
-            if(userLogin.user_id == -2){
+            write(sd, &user, sizeof(user));
+            if(user.user_id == -2){
                 flag = false;
                 break;
             }
+
+            ResponseModel response;
+            read(sd, &response, sizeof(response));
+
+            printf("%s\n", response.responseMessage);
+        } else if (strcmp(buffer, displayAM) == 0) {
+            UserAuthModel userAuthModel = printAdminMenu(user);
+            write(sd, &userAuthModel, sizeof(userAuthModel));
         }
     } while(flag);
 

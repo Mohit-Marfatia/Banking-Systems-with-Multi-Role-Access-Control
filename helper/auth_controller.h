@@ -95,10 +95,10 @@ ResponseModel getUserId(const char *filename, UserModel userModel) {
 
     UserModel user;
     int id = -1;
-    printf("Users in the database:\n");
-    while (read(fd, &user, sizeof(UserModel)) == sizeof(UserModel)) {
-        if(user.username == userModel.username && user.password == userModel.password){
-            id = userModel.user_id;
+    while (read(fd, &user, sizeof(user))) {
+        if(strcmp(user.username, userModel.username) == 0 && strcmp(user.password, userModel.password) == 0){
+            // printf("\nfound user\n");
+            id = user.user_id;
         }
     }
 
@@ -191,5 +191,38 @@ int deleteUser(const char *filename, int user_id) {
 
     return 0;
 }
+
+// ResponseModel createNewUser(UserAuthModel userAuthModel){
+//     ResponseModel response;
+//     UserModel userModel = userAuthModel.user;
+//     int fd = open(filename, O_RDONLY);  // Open file for reading
+//     if (fd < 0) {
+//         response.statusCode = 400;
+//         strcpy(response.responseMessage, "Error opening file\n");
+//         return response;
+//     }
+
+//     // Apply shared read lock
+//     if (lockFile(fd, F_RDLCK) == -1) {
+//         close(fd);
+//         response.statusCode = 400;
+//         strcpy(response.responseMessage, "Error locking file\n");
+//         return response;
+//     }
+
+//     UserModel user;
+//     int id = -1;
+//     while (read(fd, &user, sizeof(user))) {
+//         if(strcmp(user.username, userModel.username) == 0 && strcmp(user.password, userModel.password) == 0){
+//             // printf("\nfound user\n");
+//             id = user.user_id;
+//         }
+//     }
+
+//     // Unlock the file
+//     lockFile(fd, F_UNLCK);
+
+//     close(fd);
+// }
 
 #endif

@@ -10,12 +10,15 @@
 #include "definitions.h"
 #include "utils/constants.h"
 #include "models/user_model.h"
+#include "models/user_auth_model.h"
+#include "helper/auth_controller.h"
 
 
 int main() {
     struct sockaddr_in server, client;   
     int serverSD, sz, clientSD;
     char buffer[100];
+     const char *filename = "db/user_database.bin";
     
     serverSD = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -35,7 +38,8 @@ int main() {
 
     UserModel userModel;
     bool flag = true;
-    const char* displayUL = displayUserLogin();  // Display the login menu
+    const char* displayUL = displayUserLogin();
+    const char* displayAM = displayAdminMenu(); 
     do {
         // Send the login menu to the client
         write(clientSD, displayUL, strlen(displayUL)+1);
@@ -52,8 +56,29 @@ int main() {
             printf("\nRole: %s\n", getRoleName(userModel.role));
             printf("Username: %s\n", userModel.username);
             printf("Password: %s\n", userModel.password);
-
             
+            ResponseModel responseModel = getUserId(filename, userModel);
+            write(clientSD, &responseModel, sizeof(responseModel));
+            
+            if(responseModel.statusCode == 400){
+                continue;
+            } else {
+                if(userModel.role == SUPERADMIN || userModel.role == ADMIN){
+                    write(clientSD, displayAM, strlen(displayAM)+1);
+
+                    UserAuthModel userAuthModel;
+                    read(clientSD, &userAuthModel, sizeof(userAuthModel));
+                    printf("\nOpr: %s\n", getOperationName(userAuthModel.opereation));
+                    printUserModel(userAuthModel.user);
+
+                    if(userAuthModel.opereation == LOGOUT){
+                        continue;
+                    } else if(userAuthModel.opereation == EXIT){
+                        break;
+                    }
+                }
+            }
+
         }
     } while (flag);    
 

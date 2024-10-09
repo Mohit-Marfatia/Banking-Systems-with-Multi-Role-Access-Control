@@ -13,4 +13,9 @@ typedef struct userModel {
     char password[100];
 } UserModel;
 
+void printUserModel(UserModel user){
+    printf("\nID: %d\n", user.user_id);
+    printf("Role: %s\n", getRoleName(user.role));
+    printf("Username: %s\n", user.username);
+}
 #endif 
