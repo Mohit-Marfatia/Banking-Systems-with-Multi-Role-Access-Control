@@ -3,9 +3,11 @@
 
 #include <stdio.h>
 
-typedef struct responseModel {
+typedef struct responseModel
+{
     int statusCode;
     char responseMessage[100];
+    char serverMessage[100];
 } ResponseModel;
 
-#endif 
+#endif

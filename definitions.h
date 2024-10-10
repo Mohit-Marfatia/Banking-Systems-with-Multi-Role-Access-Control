@@ -1,4 +1,4 @@
-#ifndef DEFINITIONS_H  // Header guard start
+#ifndef DEFINITIONS_H // Header guard start
 #define DEFINITIONS_H
 
 #include <stdio.h>
@@ -6,15 +6,18 @@
 #include <unistd.h>
 #define PORTNO 5058
 
-const char *enterUsername(){
+const char *enterUsername()
+{
     return "Enter Username:\n";
 }
 
-const char *enterPassword(){
+const char *enterPassword()
+{
     return "Enter Password:\n";
 }
 
-void hidePasswordInput(char *password, int size) {
+void hidePasswordInput(char *password, int size)
+{
     struct termios oldt, newt;
 
     // Get the terminal settings for stdin
@@ -22,7 +25,7 @@ void hidePasswordInput(char *password, int size) {
 
     // Set the new terminal settings (turn off echo)
     newt = oldt;
-    newt.c_lflag &= ~(ECHO);  // Disable echoing
+    newt.c_lflag &= ~(ECHO); // Disable echoing
 
     // Apply the new settings
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
@@ -33,11 +36,12 @@ void hidePasswordInput(char *password, int size) {
 
     // Restore the old terminal settings (turn echo back on)
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    printf("\n");  // Move to a new line after password input
+    printf("\n"); // Move to a new line after password input
 }
 
-void printMessage(char* errorMessage){
+void printMessage(char *errorMessage)
+{
     printf("%s", errorMessage);
 }
 
-#endif 
+#endif

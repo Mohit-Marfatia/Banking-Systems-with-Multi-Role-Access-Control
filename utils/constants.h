@@ -1,12 +1,15 @@
-const char* displayUserLogin(){
+const char *displayUserLogin()
+{
     return "displayUserLogin";
 }
 
-const char* exitApplication(){
+const char *exitApplication()
+{
     return "exitApplication";
 }
 
-const char* displayAdminMenu(){
+const char *displayAdminMenu()
+{
     return "displayAdminMenu";
 }
 

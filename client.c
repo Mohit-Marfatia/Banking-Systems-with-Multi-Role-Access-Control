@@ -14,8 +14,9 @@
 #include "models/response_model.h"
 #include "models/user_auth_model.h"
 
-int main() {
-    struct sockaddr_in server;   
+int main()
+{
+    struct sockaddr_in server;
     int sd;
     char buffer[100];
 
@@ -27,21 +28,23 @@ int main() {
 
     connect(sd, (struct sockaddr *)(&server), sizeof(server));
 
-
     bool flag = true;
     UserModel user;
-    const char* displayUL = displayUserLogin();
-    const char* displayAM = displayAdminMenu();  
-    do {
+    const char *displayUL = displayUserLogin();
+    const char *displayAM = displayAdminMenu();
+    do
+    {
         // Clear the buffer before reusing it
         memset(buffer, 0, sizeof(buffer));
         read(sd, buffer, sizeof(buffer));
         // printf("%s", buffer);
-        if(strcmp(buffer, displayUL) == 0){
+        if (strcmp(buffer, displayUL) == 0)
+        {
             user = userLoginMenu();
-            
+
             write(sd, &user, sizeof(user));
-            if(user.user_id == -2){
+            if (user.user_id == -2)
+            {
                 flag = false;
                 break;
             }
@@ -50,16 +53,28 @@ int main() {
             read(sd, &response, sizeof(response));
 
             printf("%s\n", response.responseMessage);
-        } else if (strcmp(buffer, displayAM) == 0) {
-            UserAuthModel userAuthModel = printAdminMenu(user);
-            write(sd, &userAuthModel, sizeof(userAuthModel));
         }
-    } while(flag);
+        else if (strcmp(buffer, displayAM) == 0)
+        {
+            UserAuthModel userAuthModel = printAdminMenu(user);
+            // printf("---------here @ debug ---------------\n");
+            // printf("%s\n", getOperationName(userAuthModel.opereation));
+            // printUserModel(userAuthModel.user);
+
+            write(sd, &userAuthModel, sizeof(userAuthModel));
+            if (userAuthModel.opereation == LOGOUT)
+            {
+                continue;
+            }
+            if (userAuthModel.opereation == EXIT)
+            {
+                flag = false;
+                break;
+            }
+        }
+    } while (flag);
 
     close(sd);
 
     return 0;
 }
-
-
-        
