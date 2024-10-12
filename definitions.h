@@ -4,7 +4,14 @@
 #include <stdio.h>
 #include <termios.h>
 #include <unistd.h>
-#define PORTNO 5058
+#define PORTNO 5050
+#define ADMIN_ID_MIN 1
+#define ADMIN_ID_MAX 9
+#define MANAGER_ID_MIN 10
+#define MANAGER_ID_MAX 99
+#define EMPLOYEE_ID_MIN 100
+#define EMPLOYEE_ID_MAX 499
+#define CUSTOMER_ID_MIN 500
 
 const char *enterUsername()
 {

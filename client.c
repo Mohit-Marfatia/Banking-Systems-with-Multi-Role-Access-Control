@@ -30,6 +30,7 @@ int main()
 
     bool flag = true;
     UserModel user;
+    UserAuthModel userAuthModel;
     const char *displayUL = displayUserLogin();
     const char *displayAM = displayAdminMenu();
     do
@@ -40,10 +41,11 @@ int main()
         // printf("%s", buffer);
         if (strcmp(buffer, displayUL) == 0)
         {
-            user = userLoginMenu();
+            userAuthModel = userLoginMenu();
+            user = userAuthModel.user;
 
-            write(sd, &user, sizeof(user));
-            if (user.user_id == -2)
+            write(sd, &userAuthModel, sizeof(userAuthModel));
+            if (userAuthModel.opereation == EXIT)
             {
                 flag = false;
                 break;
@@ -71,10 +73,16 @@ int main()
                 flag = false;
                 break;
             }
+            else if (userAuthModel.opereation == ADD_ADMIN || userAuthModel.opereation == ADD_MANAGER || userAuthModel.opereation == ADD_EMPLOYEE || userAuthModel.opereation == ADD_CUSTOMER)
+            {
+                ResponseModel addUserResponseModel;
+                read(sd, &addUserResponseModel, sizeof(addUserResponseModel));
+                printf("%s", addUserResponseModel.responseMessage);
+            }
         }
     } while (flag);
 
     close(sd);
-
+    printf("Exited successfully.\n");
     return 0;
 }

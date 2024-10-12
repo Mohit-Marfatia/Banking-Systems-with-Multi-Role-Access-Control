@@ -1,5 +1,6 @@
 typedef enum
 {
+    LOGIN,
     ADD_ADMIN,
     ADD_MANAGER,
     ADD_EMPLOYEE,
@@ -12,6 +13,8 @@ const char *getOperationName(UserAuthOperations opr)
 {
     switch (opr)
     {
+    case LOGIN:
+        return "LOGIN";
     case ADD_ADMIN:
         return "ADD_ADMIN";
     case ADD_MANAGER:

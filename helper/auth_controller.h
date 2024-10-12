@@ -8,6 +8,7 @@
 #include "../models/user_model.h"
 #include "../models/user_auth_model.h"
 #include "../models/response_model.h"
+#include "../definitions.h"
 
 // Function to lock file
 int lockFile(int fd, int lockType)
@@ -50,6 +51,120 @@ int createUser(const char *filename, UserModel user)
 
     close(fd);
     return 0;
+}
+
+ResponseModel createNewUser(const char *filename, UserAuthModel userAuthModel)
+{
+    ResponseModel response;
+    UserModel userModel = userAuthModel.user;
+    int fd = open(filename, O_RDWR); // Open file for reading
+    if (fd < 0)
+    {
+        response.statusCode = 400;
+        strcpy(response.responseMessage, "Error opening file\n");
+        return response;
+    }
+
+    // Apply shared read lock
+    if (lockFile(fd, F_RDLCK) == -1)
+    {
+        close(fd);
+        response.statusCode = 400;
+        strcpy(response.responseMessage, "Error locking file\n");
+        return response;
+    }
+
+    UserModel user;
+    int id = -1, maxId;
+    if (userAuthModel.opereation == ADD_ADMIN)
+    {
+        lseek(fd, ADMIN_ID_MIN * sizeof(UserModel), SEEK_SET);
+        maxId = ADMIN_ID_MIN - 1;
+    }
+    else if (userAuthModel.opereation == ADD_MANAGER)
+    {
+        lseek(fd, MANAGER_ID_MIN * sizeof(UserModel), SEEK_SET);
+        maxId = MANAGER_ID_MIN - 1;
+    }
+    else if (userAuthModel.opereation == ADD_EMPLOYEE)
+    {
+        lseek(fd, EMPLOYEE_ID_MIN * sizeof(UserModel), SEEK_SET);
+        maxId = EMPLOYEE_ID_MIN - 1;
+    }
+    else if (userAuthModel.opereation == ADD_CUSTOMER)
+    {
+        lseek(fd, CUSTOMER_ID_MIN * sizeof(UserModel), SEEK_SET);
+        maxId = CUSTOMER_ID_MIN - 1;
+    }
+
+    while (read(fd, &user, sizeof(user)))
+    {
+        int id = user.user_id;
+        if (userAuthModel.opereation == ADD_ADMIN)
+        {
+            if (strcmp(user.username, "dummy") != 0 && id <= ADMIN_ID_MAX)
+            {
+                printf("%d\n", id);
+                maxId = id;
+            }
+            else
+            {
+                break;
+            }
+        }
+        else if (userAuthModel.opereation == ADD_MANAGER)
+        {
+            if (strcmp(user.username, "dummy") != 0 && id <= MANAGER_ID_MAX)
+            {
+                printf("%d\n", id);
+                maxId = id;
+            }
+            else
+            {
+                break;
+            }
+        }
+        else if (userAuthModel.opereation == ADD_EMPLOYEE)
+        {
+            if (strcmp(user.username, "dummy") != 0 && id <= EMPLOYEE_ID_MAX)
+            {
+                printf("%d\n", id);
+                maxId = id;
+            }
+            else
+            {
+                break;
+            }
+        }
+        else if (userAuthModel.opereation == ADD_CUSTOMER)
+        {
+            if (strcmp(user.username, "dummy") != 0)
+            {
+                printf("%d\n", id);
+                maxId = id;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    if(userAuthModel.opereation != ADD_CUSTOMER) lseek(fd, -1 * sizeof(UserModel), SEEK_CUR);
+    userModel.user_id = maxId + 1;
+    userModel.isLoggedIn = false;
+    userModel.accStatus = ENABLED;
+    write(fd, &userModel, sizeof(UserModel));
+    // Unlock the file
+    lockFile(fd, F_UNLCK);
+
+    response.statusCode = 200;
+    char temp[100];
+    sprintf(temp, "\nUser added successfully! Id assigned = %d\n", maxId + 1);
+    strcpy(response.responseMessage, temp);
+
+    close(fd);
+    return response;
 }
 
 // Function to read users from the file with shared lock
@@ -233,44 +348,6 @@ int deleteUser(const char *filename, int user_id)
     rename("temp.bin", filename); // Rename temp file as the original
 
     return 0;
-}
-
-ResponseModel createNewUser(const char *filename, UserAuthModel userAuthModel)
-{
-    ResponseModel response;
-    UserModel userModel = userAuthModel.user;
-    int fd = open(filename, O_RDONLY); // Open file for reading
-    if (fd < 0)
-    {
-        response.statusCode = 400;
-        strcpy(response.responseMessage, "Error opening file\n");
-        return response;
-    }
-
-    // Apply shared read lock
-    if (lockFile(fd, F_RDLCK) == -1)
-    {
-        close(fd);
-        response.statusCode = 400;
-        strcpy(response.responseMessage, "Error locking file\n");
-        return response;
-    }
-
-    UserModel user;
-    int id = -1;
-    while (read(fd, &user, sizeof(user)))
-    {
-        if (strcmp(user.username, userModel.username) == 0 && strcmp(user.password, userModel.password) == 0)
-        {
-            // printf("\nfound user\n");
-            id = user.user_id;
-        }
-    }
-
-    // Unlock the file
-    lockFile(fd, F_UNLCK);
-
-    close(fd);
 }
 
 #endif

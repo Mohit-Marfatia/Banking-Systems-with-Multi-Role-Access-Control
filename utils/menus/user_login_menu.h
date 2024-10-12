@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include "../../models/user_model.h"
+#include "../../models/user_auth_model.h"
 #include "../../definitions.h"
 
-UserModel userLoginMenu()
+UserAuthModel userLoginMenu()
 {
     int choice;
     UserModel newUser;
+    UserAuthModel userAuthModel;
     printf("\nLogin as:\n");
     printf("1. Customer\n");
     printf("2. Bank Employee\n");
@@ -24,16 +26,20 @@ UserModel userLoginMenu()
         newUser.role = CUSTOMER;
         strcpy(newUser.username, username);
         strcpy(newUser.password, password);
-        return newUser;
+        userAuthModel.user = newUser;
+        userAuthModel.opereation = LOGIN;
+        return userAuthModel;
     }
     else if (choice == 9)
     {
 
-        newUser.user_id = -2;
+        newUser.user_id = -1;
         newUser.role = CUSTOMER;
         strcpy(newUser.username, "");
         strcpy(newUser.password, "");
-        return newUser;
+        userAuthModel.user = newUser;
+        userAuthModel.opereation = EXIT;
+        return userAuthModel;
     }
     else
     {
@@ -58,16 +64,24 @@ UserModel userLoginMenu()
         {
         case 1:
             newUser.role = SUPERADMIN;
-            return newUser;
+            userAuthModel.user = newUser;
+            userAuthModel.opereation = LOGIN;
+            return userAuthModel;
         case 2:
             newUser.role = ADMIN;
-            return newUser;
+            userAuthModel.user = newUser;
+            userAuthModel.opereation = LOGIN;
+            return userAuthModel;
         case 3:
             newUser.role = MANAGER;
-            return newUser;
+            userAuthModel.user = newUser;
+            userAuthModel.opereation = LOGIN;
+            return userAuthModel;
         case 4:
             newUser.role = EMPLOYEE;
-            return newUser;
+            userAuthModel.user = newUser;
+            userAuthModel.opereation = LOGIN;
+            return userAuthModel;
         default:
             break;
         }

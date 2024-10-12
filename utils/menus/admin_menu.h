@@ -57,7 +57,7 @@ UserAuthModel printAdminMenu(UserModel user)
             return userAuthModel;
             break;
         case 9:
-            printf("---here@admin_menu---");
+            // printf("---here@admin_menu---");
             userAuthModel.opereation = EXIT;
             userAuthModel.user = user;
             return userAuthModel;
