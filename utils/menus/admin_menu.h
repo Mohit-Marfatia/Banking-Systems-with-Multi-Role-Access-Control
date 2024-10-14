@@ -8,7 +8,7 @@ UserAuthModel printAdminMenu(UserModel user)
     UserModel newUser;
 
     printf("\n---Admin Menu Controls---\n");
-    printf("1. Add New Bank Employee\n");
+    printf("1. Add New Customer/Employee\n");
     printf("2. Modify Customer/Employee Details\n");
     printf("3. Manage User Roles\n");
     printf("4. Change Password\n");
@@ -21,7 +21,7 @@ UserAuthModel printAdminMenu(UserModel user)
 
     if (choice == 1 && user.role == SUPERADMIN)
     {
-        printf("\n---Admin Menu Controls (Add New Bank Employee)---\n");
+        printf("\n---Admin Menu Controls (Add New Customer/Employee)---\n");
         printf("1. Add an Admin\n");
         printf("2. Add an Manager\n");
         printf("3. Add an Employee\n");
@@ -80,13 +80,16 @@ UserAuthModel printAdminMenu(UserModel user)
     }
     else if (choice == 1 && user.role == ADMIN)
     {
-        printf("\n---Admin Menu Controls (Add New Bank Employee)---\n");
+        printf("\n---Admin Menu Controls (Add New Customer/Employee)---\n");
         printf("1. Add an Manager\n");
         printf("2. Add an Employee\n");
         printf("3. Add an Customer\n");
         printf("4. Logout\n");
         printf("9. Exit\n");
+        int options;
 
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
         switch (choice)
         {
         case 1:
@@ -103,11 +106,14 @@ UserAuthModel printAdminMenu(UserModel user)
             break;
         case 4:
             userAuthModel.opereation = LOGOUT;
-            newUser.role = CUSTOMER;
+            userAuthModel.user = user;
+            return userAuthModel;
             break;
         case 9:
+            // printf("---here@admin_menu---");
             userAuthModel.opereation = EXIT;
-            newUser.role = CUSTOMER;
+            userAuthModel.user = user;
+            return userAuthModel;
             break;
         default:
             break;

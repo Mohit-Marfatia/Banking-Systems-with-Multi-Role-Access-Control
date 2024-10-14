@@ -97,6 +97,7 @@ ResponseModel createNewUser(const char *filename, UserAuthModel userAuthModel)
         maxId = CUSTOMER_ID_MIN - 1;
     }
 
+    //TODO: check for same username
     while (read(fd, &user, sizeof(user)))
     {
         int id = user.user_id;

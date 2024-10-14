@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #include "definitions.h"
 #include "utils/constants.h"
-// #include "models/user_model.h"
+#include "models/user_model.h"
 #include "models/user_auth_model.h"
 #include "helper/auth_controller.h"
 
@@ -75,8 +75,9 @@ int main()
 
             ResponseModel responseModel = getUserId(filename, userModel);
             // char serverMsg[100];
+            // printf("-----%d----", responseModel.statusCode);
             int userId = atoi(responseModel.serverMessage);
-            printf("-----------------%d------\n", userId);
+            // printf("-----------------%d------\n", userId);
             if (responseModel.statusCode == 400)
             {
                 continue;
