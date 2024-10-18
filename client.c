@@ -45,7 +45,7 @@ int main()
             user = userAuthModel.user;
 
             write(sd, &userAuthModel, sizeof(userAuthModel));
-            if (userAuthModel.opereation == EXIT)
+            if (userAuthModel.operation == EXIT)
             {
                 flag = false;
                 break;
@@ -64,20 +64,40 @@ int main()
             // printUserModel(userAuthModel.user);
 
             write(sd, &userAuthModel, sizeof(userAuthModel));
-            if (userAuthModel.opereation == LOGOUT)
+            if (userAuthModel.operation == LOGOUT)
             {
                 continue;
             }
-            if (userAuthModel.opereation == EXIT)
+            if (userAuthModel.operation == EXIT)
             {
                 flag = false;
                 break;
             }
-            else if (userAuthModel.opereation == ADD_ADMIN || userAuthModel.opereation == ADD_MANAGER || userAuthModel.opereation == ADD_EMPLOYEE || userAuthModel.opereation == ADD_CUSTOMER)
+            else if (userAuthModel.operation == ADD_ADMIN || userAuthModel.operation == ADD_MANAGER || userAuthModel.operation == ADD_EMPLOYEE || userAuthModel.operation == ADD_CUSTOMER)
             {
                 ResponseModel addUserResponseModel;
                 read(sd, &addUserResponseModel, sizeof(addUserResponseModel));
                 printf("%s", addUserResponseModel.responseMessage);
+            }
+            else if (userAuthModel.operation == MODIFY_ADMIN || userAuthModel.operation == MODIFY_MANAGER || userAuthModel.operation == MODIFY_EMPLOYEE || userAuthModel.operation == MODIFY_CUSTOMER)
+            {
+                ResponseModel modifyUserResponseModel;
+                read(sd, &modifyUserResponseModel, sizeof(modifyUserResponseModel));
+                if(modifyUserResponseModel.statusCode == 400){
+                    printf("%s", modifyUserResponseModel.responseMessage);
+                    continue;
+                }
+                else{
+                    UserModel originalModel;
+                    userModelFromString(modifyUserResponseModel.serverMessage, &originalModel);
+                    UserModel modifiedUser = modifyUserDetails(originalModel);
+                    write(sd, &modifiedUser, sizeof(modifiedUser));
+
+                    read(sd, &modifyUserResponseModel, sizeof(modifyUserResponseModel));
+
+                    printf("%s", modifyUserResponseModel.responseMessage);
+                }
+                
             }
         }
     } while (flag);

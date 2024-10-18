@@ -6,8 +6,8 @@
 typedef struct responseModel
 {
     int statusCode;
-    char responseMessage[100];
-    char serverMessage[100];
+    char responseMessage[1024];
+    char serverMessage[1024];
 } ResponseModel;
 
 #endif

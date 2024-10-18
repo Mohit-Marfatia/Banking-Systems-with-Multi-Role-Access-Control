@@ -27,7 +27,7 @@ UserAuthModel userLoginMenu()
         strcpy(newUser.username, username);
         strcpy(newUser.password, password);
         userAuthModel.user = newUser;
-        userAuthModel.opereation = LOGIN;
+        userAuthModel.operation = LOGIN;
         return userAuthModel;
     }
     else if (choice == 9)
@@ -38,7 +38,7 @@ UserAuthModel userLoginMenu()
         strcpy(newUser.username, "");
         strcpy(newUser.password, "");
         userAuthModel.user = newUser;
-        userAuthModel.opereation = EXIT;
+        userAuthModel.operation = EXIT;
         return userAuthModel;
     }
     else
@@ -65,22 +65,22 @@ UserAuthModel userLoginMenu()
         case 1:
             newUser.role = SUPERADMIN;
             userAuthModel.user = newUser;
-            userAuthModel.opereation = LOGIN;
+            userAuthModel.operation = LOGIN;
             return userAuthModel;
         case 2:
             newUser.role = ADMIN;
             userAuthModel.user = newUser;
-            userAuthModel.opereation = LOGIN;
+            userAuthModel.operation = LOGIN;
             return userAuthModel;
         case 3:
             newUser.role = MANAGER;
             userAuthModel.user = newUser;
-            userAuthModel.opereation = LOGIN;
+            userAuthModel.operation = LOGIN;
             return userAuthModel;
         case 4:
             newUser.role = EMPLOYEE;
             userAuthModel.user = newUser;
-            userAuthModel.opereation = LOGIN;
+            userAuthModel.operation = LOGIN;
             return userAuthModel;
         default:
             break;

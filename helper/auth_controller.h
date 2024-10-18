@@ -76,32 +76,32 @@ ResponseModel createNewUser(const char *filename, UserAuthModel userAuthModel)
 
     UserModel user;
     int id = -1, maxId;
-    if (userAuthModel.opereation == ADD_ADMIN)
+    if (userAuthModel.operation == ADD_ADMIN)
     {
         lseek(fd, ADMIN_ID_MIN * sizeof(UserModel), SEEK_SET);
         maxId = ADMIN_ID_MIN - 1;
     }
-    else if (userAuthModel.opereation == ADD_MANAGER)
+    else if (userAuthModel.operation == ADD_MANAGER)
     {
         lseek(fd, MANAGER_ID_MIN * sizeof(UserModel), SEEK_SET);
         maxId = MANAGER_ID_MIN - 1;
     }
-    else if (userAuthModel.opereation == ADD_EMPLOYEE)
+    else if (userAuthModel.operation == ADD_EMPLOYEE)
     {
         lseek(fd, EMPLOYEE_ID_MIN * sizeof(UserModel), SEEK_SET);
         maxId = EMPLOYEE_ID_MIN - 1;
     }
-    else if (userAuthModel.opereation == ADD_CUSTOMER)
+    else if (userAuthModel.operation == ADD_CUSTOMER)
     {
         lseek(fd, CUSTOMER_ID_MIN * sizeof(UserModel), SEEK_SET);
         maxId = CUSTOMER_ID_MIN - 1;
     }
 
-    //TODO: check for same username
+    // TODO: check for same username
     while (read(fd, &user, sizeof(user)))
     {
         int id = user.user_id;
-        if (userAuthModel.opereation == ADD_ADMIN)
+        if (userAuthModel.operation == ADD_ADMIN)
         {
             if (strcmp(user.username, "dummy") != 0 && id <= ADMIN_ID_MAX)
             {
@@ -113,7 +113,7 @@ ResponseModel createNewUser(const char *filename, UserAuthModel userAuthModel)
                 break;
             }
         }
-        else if (userAuthModel.opereation == ADD_MANAGER)
+        else if (userAuthModel.operation == ADD_MANAGER)
         {
             if (strcmp(user.username, "dummy") != 0 && id <= MANAGER_ID_MAX)
             {
@@ -125,7 +125,7 @@ ResponseModel createNewUser(const char *filename, UserAuthModel userAuthModel)
                 break;
             }
         }
-        else if (userAuthModel.opereation == ADD_EMPLOYEE)
+        else if (userAuthModel.operation == ADD_EMPLOYEE)
         {
             if (strcmp(user.username, "dummy") != 0 && id <= EMPLOYEE_ID_MAX)
             {
@@ -137,7 +137,7 @@ ResponseModel createNewUser(const char *filename, UserAuthModel userAuthModel)
                 break;
             }
         }
-        else if (userAuthModel.opereation == ADD_CUSTOMER)
+        else if (userAuthModel.operation == ADD_CUSTOMER)
         {
             if (strcmp(user.username, "dummy") != 0)
             {
@@ -151,7 +151,8 @@ ResponseModel createNewUser(const char *filename, UserAuthModel userAuthModel)
         }
     }
 
-    if(userAuthModel.opereation != ADD_CUSTOMER) lseek(fd, -1 * sizeof(UserModel), SEEK_CUR);
+    if (userAuthModel.operation != ADD_CUSTOMER)
+        lseek(fd, -1 * sizeof(UserModel), SEEK_CUR);
     userModel.user_id = maxId + 1;
     userModel.isLoggedIn = false;
     userModel.accStatus = ENABLED;
@@ -201,9 +202,10 @@ int readUsers(const char *filename)
 }
 
 // Function to get user-id from the file with shared lock
-ResponseModel getUserId(const char *filename, UserModel userModel)
+ResponseModel getUserId(const char *filename, UserAuthModel userAuthModel)
 {
     ResponseModel response;
+    UserModel userModel = userAuthModel.user;
     int fd = open(filename, O_RDONLY); // Open file for reading
     if (fd < 0)
     {
@@ -226,12 +228,31 @@ ResponseModel getUserId(const char *filename, UserModel userModel)
     bool isLoggedIn = false;
     while (read(fd, &user, sizeof(user)))
     {
-        if (strcmp(user.username, userModel.username) == 0 && strcmp(user.password, userModel.password) == 0)
+        if (userAuthModel.operation == LOGIN)
         {
-            // printf("\nfound user\n");
-            id = user.user_id;
-            isLoggedIn = user.isLoggedIn;
-            break;
+            if (strcmp(user.username, userModel.username) == 0 && strcmp(user.password, userModel.password) == 0)
+            {
+                // printf("\nfound user\n");
+                id = user.user_id;
+                isLoggedIn = user.isLoggedIn;
+                break;
+            }
+        }
+        else
+        {   
+    printf("------------debug--------------\n");
+    printf("%s | %s\n", user.username, userModel.username);
+            if (strcmp(user.username, userModel.username) == 0)
+            {
+                id = user.user_id;
+                userModel.user_id = user.user_id;
+                userModel.accStatus = user.accStatus;
+                userModel.isLoggedIn = user.isLoggedIn;
+                strcpy(userModel.password, user.password);
+                userModel.role = user.role;
+                strcpy(userModel.username, user.username);
+                break;
+            }
         }
     }
 
@@ -242,9 +263,9 @@ ResponseModel getUserId(const char *filename, UserModel userModel)
     if (id == -1)
     {
         response.statusCode = 400;
-        strcpy(response.responseMessage, "Either username or password is incorrect. Try again!\n");
+        strcpy(response.responseMessage, userAuthModel.operation == LOGIN ? "Either username or password is incorrect. Try again!\n" : "Username is incorrect. Try again!\n");
     }
-    else if (isLoggedIn)
+    else if (userAuthModel.operation == LOGIN && isLoggedIn)
     {
         response.statusCode = 400;
         strcpy(response.responseMessage, "Maximum amount of logins reached! Please logout from other devices\n");
@@ -255,7 +276,7 @@ ResponseModel getUserId(const char *filename, UserModel userModel)
 
         sprintf(str, "%d", id); // Convert int to string
         response.statusCode = 200;
-        strcpy(response.serverMessage, str);
+        userAuthModel.operation == LOGIN ? strcpy(response.serverMessage, str) : userModelToString(userModel, response.serverMessage);
         strcpy(response.responseMessage, "Login successfull!\n");
     }
 
@@ -263,46 +284,71 @@ ResponseModel getUserId(const char *filename, UserModel userModel)
 }
 
 // Function to update a user by user_id
-int updateUser(const char *filename, int user_id, UserModel updatedUser)
+ResponseModel updateUser(const char *filename, int user_id, UserModel updatedUser)
 {
+    ResponseModel responseModel;
     int fd = open(filename, O_RDWR); // Open file for reading and writing
     if (fd < 0)
     {
-        perror("Error opening file");
-        return -1;
+        responseModel.statusCode = 400;
+        strcpy(responseModel.responseMessage, "Error opening file");
+        return responseModel;
     }
 
     // Apply exclusive write lock
     if (lockFile(fd, F_WRLCK) == -1)
     {
-        perror("Error locking file");
-        close(fd);
-        return -1;
+        responseModel.statusCode = 400;
+        strcpy(responseModel.responseMessage, "Error locking file");
+        return responseModel;
     }
 
     UserModel user;
     // printf("------here------");
+    if (user_id == 0)
+    {
+        lseek(fd, 0, SEEK_SET);
+    }
+    else if (user_id > 0 && user_id <= ADMIN_ID_MAX)
+    {
+        lseek(fd, ADMIN_ID_MIN * sizeof(UserModel), SEEK_SET);
+    }
+    else if (user_id <= MANAGER_ID_MAX)
+    {
+        lseek(fd, MANAGER_ID_MIN * sizeof(UserModel), SEEK_SET);
+    }
+    else if (user_id <= EMPLOYEE_ID_MAX)
+    {
+        lseek(fd, EMPLOYEE_ID_MIN * sizeof(UserModel), SEEK_SET);
+    }
+    else if (user_id >= CUSTOMER_ID_MIN)
+    {
+        lseek(fd, CUSTOMER_ID_MIN * sizeof(UserModel), SEEK_SET);
+    }
     int count = 0;
     while (read(fd, &user, sizeof(user)))
     {
         if (user.user_id == user_id)
         {
             // Move the file pointer back to overwrite the user
-            lseek(fd, count * sizeof(UserModel), SEEK_SET);
+            lseek(fd, -1 * sizeof(UserModel), SEEK_CUR);
             if (write(fd, &updatedUser, sizeof(UserModel)) != sizeof(UserModel))
             {
-                perror("Error writing to file");
+                responseModel.statusCode = 400;
+                strcpy(responseModel.responseMessage, "Error writing to file");
+                return responseModel;
             }
             break;
         }
-        count++;
     }
 
     // Unlock the file
     lockFile(fd, F_UNLCK);
 
     close(fd);
-    return 0;
+    responseModel.statusCode = 200;
+    strcpy(responseModel.responseMessage, "Upadated user!");
+    return responseModel;
 }
 
 // Function to delete a user by user_id
