@@ -1,3 +1,6 @@
+#ifndef USER_AUTH_OPERATIONS_H
+#define USER_AUTH_OPERATIONS_H
+
 typedef enum
 {
     LOGIN,
@@ -44,3 +47,5 @@ const char *getOperationName(UserAuthOperations opr)
         return "UNKNOWN";
     }
 }
+
+#endif

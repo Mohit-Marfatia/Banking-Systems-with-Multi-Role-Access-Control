@@ -2,19 +2,24 @@
 #include <string.h>
 #include <stdbool.h>
 #include "models/user_model.h"
-#include "models/user_information_model.h"
+#include "models/db_information_model.h"
 #include "helper/auth_controller.h"
+#include "helper/account_controller.h"
 
 int main() {
     
-    // UserInformationModel model;
+    // DbInformationModel model;
     // model.adminCount = 0;
     // model.managerCount = 0;
     // model.employeeCount = 0;
     // model.customerCount = 0;
     // model.totalUsers = 0;
+    // model.transactionsCount = 0;
+    // model.accountCount = 0;
+    // model.loanCount = 0;
+    // model.feedbackCount = 0;
 
-    // int fd = open(userInformationDatabase, O_RDWR | O_CREAT, 0666), id;
+    // int fd = open(dbInformationDatabase, O_RDWR | O_CREAT, 0666), id;
     // lseek(fd, 0, SEEK_SET);
     // write(fd, &model, sizeof(model));
     // close(fd);
@@ -38,6 +43,10 @@ int main() {
     // createUser(user);
 
     readAllUsers();
-    // readAllAdmin();
+    readAllAdmin();
+    readAllManagers();
+    readAllEmployees();
+    readAllCustomers();
+    readAllAccounts();
     return 0;
 }

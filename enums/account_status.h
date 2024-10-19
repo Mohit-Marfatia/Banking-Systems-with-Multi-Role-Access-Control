@@ -1,7 +1,10 @@
+#ifndef ACCOUNT_STATUS_H
+#define ACCOUNT_STATUS_H
+
 typedef enum
 {
-    ACTIVATED, // 0
-    DEACTIVATED // 1
+    ACTIVATED,
+    DEACTIVATED
 } AccountStatus;
 
 const char *getAccountStatus(AccountStatus status)
@@ -14,3 +17,5 @@ const char *getAccountStatus(AccountStatus status)
         return "DEACTIVATED";
     }
 }
+
+#endif

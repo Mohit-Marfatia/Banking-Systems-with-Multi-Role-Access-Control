@@ -8,22 +8,13 @@
 #include <pthread.h>
 #include "../models/user_model.h"
 #include "../models/user_id_model.h"
-#include "../models/user_information_model.h"
+#include "../models/db_information_model.h"
 #include "../models/user_auth_model.h"
 #include "../models/response_model.h"
 #include "../utils/constants.h"
-
-int lock_record(int fd, int id, int lock_type)
-{
-    struct flock fl;
-    fl.l_type = lock_type;
-    fl.l_whence = SEEK_SET;
-    fl.l_start = id * sizeof(UserModel);
-    fl.l_len = sizeof(UserModel);
-    fl.l_pid = getpid();
-
-    return fcntl(fd, F_SETLKW, &fl);
-}
+#include "../utils/utils.h"
+#include "../enums/account_type.h"
+#include "./account_controller.h"
 
 ResponseModel getUserId(UserAuthModel userAuthModel)
 {
@@ -108,8 +99,9 @@ ResponseModel getUserId(UserAuthModel userAuthModel)
 
 int getUserIdInformation(UserRole role)
 {
-    int fd = open(userInformationDatabase, O_RDWR | O_CREAT, 0666), id;
-    UserInformationModel model;
+    int fd = open(dbInformationDatabase, O_RDONLY), id;
+    DbInformationModel model;
+    lockRecordDbInfo(fd, F_RDLCK);
     lseek(fd, 0, SEEK_SET);
     read(fd, &model, sizeof(model));
 
@@ -130,12 +122,15 @@ int getUserIdInformation(UserRole role)
     default:
         break;
     }
+    lockRecordDbInfo(fd, F_UNLCK);
+    close(fd);
 }
 
 void updateUserInformation(UserRole role)
 {
-    UserInformationModel model;
-    int fd = open(userInformationDatabase, O_RDWR | O_CREAT, 0666), count, total;
+    DbInformationModel model;
+    int fd = open(dbInformationDatabase, O_RDWR | O_CREAT, 0666), count, total;
+    lockRecordDbInfo(fd, F_WRLCK);
     lseek(fd, 0, SEEK_SET);
     read(fd, &model, sizeof(model));
 
@@ -165,7 +160,7 @@ void updateUserInformation(UserRole role)
     count = model.totalUsers;
     model.totalUsers = count + 1;
     write(fd, &model, sizeof(model));
-
+    lockRecordDbInfo(fd, F_UNLCK);
     close(fd);
 }
 
@@ -182,7 +177,7 @@ void *task1(void *arg)
     {
         perror("Error opening file");
     } // File descriptor
-    if (lock_record(fd, user->user_id, F_WRLCK) == -1)
+    if (lockRecordUserDb(fd, user->user_id, F_WRLCK) == -1)
     {
         perror("Error locking file");
         close(fd);
@@ -195,7 +190,7 @@ void *task1(void *arg)
         perror("Error writing to file");
     }
 
-    lock_record(fd, user->user_id, F_UNLCK);
+    lockRecordUserDb(fd, user->user_id, F_UNLCK);
     close(fd);
 
     return NULL;
@@ -220,122 +215,6 @@ void *task3(void *arg)
     return NULL;
 }
 
-// int createUser(UserModel user)
-// {
-//     user.user_id = getUserIdInformation(ALL);
-
-//     // pthread_t thread1, thread2, thread3;
-//     // printf("Creating threads!\n");
-//     // // Task 1: Lock, Write, Unlock
-//     // pthread_create(&thread1, NULL, task1, &user);
-
-//     // // Task 2: Update user information
-//     // pthread_create(&thread2, NULL, task2, &user);
-
-//     // // Task 3: Add user to specific DB
-//     // pthread_create(&thread3, NULL, task3, &user);
-
-//     // // Wait for threads to finish
-//     // pthread_join(thread1, NULL);
-//     // pthread_join(thread2, NULL);
-//     // pthread_join(thread3, NULL);
-//     // printf("Combined all threads!\n");
-//     int fd = open(userDatabase, O_RDWR | O_CREAT, 0666);
-//     if (fd < 0)
-//     {
-//         perror("Error opening file");
-//     } // File descriptor
-//     if (lock_record(fd, user.user_id, F_WRLCK) == -1)
-//     {
-//         perror("Error locking file");
-//         close(fd);
-//     }
-
-//     // Append user data to the file
-//     lseek(fd, 0, SEEK_END);
-//     if (write(fd, &user, sizeof(UserModel)) != sizeof(UserModel))
-//     {
-//         perror("Error writing to file");
-//     }
-
-//     lock_record(fd, user.user_id, F_UNLCK);
-//     close(fd);
-
-//     UserInformationModel model;
-
-//     int fd2 = open(userInformationDatabase, O_RDWR | O_CREAT, 0666);
-//     perror("Error opening:");
-//     int count;
-//     lseek(fd2, 0, SEEK_SET);
-//     perror("Error seek:");
-//     read(fd2, &model, sizeof(model));
-//     perror("Error read:");
-//     switch (user.role)
-//     {
-//     case ADMIN:
-//         count = model.adminCount;
-//         model.adminCount = count + 1;
-//         break;
-//     case MANAGER:
-//         count = model.managerCount;
-//         model.managerCount = count + 1;
-//         break;
-//     case EMPLOYEE:
-//         count = model.employeeCount;
-//         model.employeeCount = count + 1;
-//         break;
-//     case CUSTOMER:
-//         count = model.customerCount;
-//         model.customerCount = count + 1;
-//         break;
-
-//     default:
-//         break;
-//     }
-
-//     count = model.totalUsers;
-//     printf("totalusers = %d\n", count);
-//     model.totalUsers = count + 1;
-//     lseek(fd2, 0, SEEK_SET);
-//     write(fd2, &model, sizeof(UserInformationModel));
-
-//     close(fd2);
-//     int fd3;
-//     UserIdModel idModel;
-//     switch (user.role)
-//     {
-//     case ADMIN:
-//         fd3 = open(adminDatabase, O_RDWR | O_CREAT, 0666);
-//         break;
-//     case MANAGER:
-//         fd3 = open(managerDatabase, O_RDWR | O_CREAT, 0666);
-//         break;
-//     case EMPLOYEE:
-//         fd3 = open(employeeDatabase, O_RDWR | O_CREAT, 0666);
-//         break;
-//     case CUSTOMER:
-//         fd3 = open(customerDatabase, O_RDWR | O_CREAT, 0666);
-//         break;
-//     default:
-//         break;
-//     }
-
-//     if (fd3< 0)
-//     {
-//         perror("Error opening file");
-//     }
-//     lseek(fd3, 0, SEEK_END);
-//     idModel.user_id = user.user_id;
-//     strcpy(idModel.username, user.username);
-//     if (write(fd3, &idModel, sizeof(idModel)) != sizeof(idModel))
-//     {
-//         perror("Error writing to file");
-//     }
-
-//     close(fd3);
-//     return 0;
-// }
-
 int createUser(UserModel user)
 {
     user.user_id = getUserIdInformation(ALL);
@@ -350,7 +229,7 @@ int createUser(UserModel user)
     }
 
     // Lock the record for writing
-    if (lock_record(fd, user.user_id, F_WRLCK) == -1)
+    if (lockRecordUserDb(fd, user.user_id, F_WRLCK) == -1)
     {
         perror("Error locking user database");
         close(fd);
@@ -373,12 +252,13 @@ int createUser(UserModel user)
     }
 
     // Unlock and close user database file
-    lock_record(fd, user.user_id, F_UNLCK);
+    lockRecordUserDb(fd, user.user_id, F_UNLCK);
     close(fd);
 
     // Update the user information model
-    UserInformationModel model;
-    int fd2 = open(userInformationDatabase, O_RDWR);
+    DbInformationModel model;
+    int fd2 = open(dbInformationDatabase, O_RDWR);
+    lockRecordDbInfo(fd2, F_WRLCK);
     if (fd2 < 0)
     {
         perror("Error opening user information database");
@@ -392,7 +272,7 @@ int createUser(UserModel user)
         return -1;
     }
 
-    if (read(fd2, &model, sizeof(UserInformationModel)) != sizeof(UserInformationModel))
+    if (read(fd2, &model, sizeof(DbInformationModel)) != sizeof(DbInformationModel))
     {
         perror("Error reading from user information database");
         close(fd2);
@@ -428,13 +308,13 @@ int createUser(UserModel user)
         return -1;
     }
 
-    if (write(fd2, &model, sizeof(UserInformationModel)) != sizeof(UserInformationModel))
+    if (write(fd2, &model, sizeof(DbInformationModel)) != sizeof(DbInformationModel))
     {
         perror("Error writing to user information database");
         close(fd2);
         return -1;
     }
-
+    lockRecordDbInfo(fd2, F_UNLCK);
     close(fd2);
 
     // Add user to the specific role-based database
@@ -484,6 +364,8 @@ int createUser(UserModel user)
     }
 
     close(fd3);
+    // Create Savings Account of customer
+    if(user.role == CUSTOMER) createAccount(user.user_id, SAVINGS);
     return 0;
 }
 
@@ -499,7 +381,7 @@ ResponseModel login(int userId, UserModel userModel)
         close(fd);
         return responseModel;
     }
-    if (lock_record(fd, userId, F_WRLCK) == -1)
+    if (lockRecordUserDb(fd, userId, F_WRLCK) == -1)
     {
         strcpy(responseModel.responseMessage, "Error locking file");
         responseModel.statusCode = 400;
@@ -517,7 +399,7 @@ ResponseModel login(int userId, UserModel userModel)
         return responseModel;
     }
 
-    lock_record(fd, userId, F_UNLCK);
+    lockRecordUserDb(fd, userId, F_UNLCK);
     close(fd);
 
     if (user.accStatus == DEACTIVATED)
@@ -552,7 +434,7 @@ ResponseModel updateUser(int userId, UserModel userModel)
         close(fd);
         return responseModel;
     }
-    if (lock_record(fd, userId, F_WRLCK) == -1)
+    if (lockRecordUserDb(fd, userId, F_WRLCK) == -1)
     {
         strcpy(responseModel.responseMessage, "Error locking file");
         responseModel.statusCode = 400;
@@ -570,7 +452,7 @@ ResponseModel updateUser(int userId, UserModel userModel)
         return responseModel;
     }
 
-    lock_record(fd, userId, F_UNLCK);
+    lockRecordUserDb(fd, userId, F_UNLCK);
     close(fd);
     responseModel.statusCode = 200;
     strcpy(responseModel.responseMessage, "Upadated user!");
@@ -585,7 +467,7 @@ UserModel getUserModelFromId(int userId)
     {
         close(fd);
     }
-    if (lock_record(fd, userId, F_WRLCK) == -1)
+    if (lockRecordUserDb(fd, userId, F_WRLCK) == -1)
     {
         close(fd);
     }
@@ -597,15 +479,15 @@ UserModel getUserModelFromId(int userId)
         close(fd);
     }
 
-    lock_record(fd, userId, F_UNLCK);
+    lockRecordUserDb(fd, userId, F_UNLCK);
     close(fd);
 
     return userModel;
 }
 
-void changeRole(UserModel userModel, UserRole userRole){
+void changeRole(UserModel userModel, UserRole userRole)
+{
     int fd = open(userDatabase, O_RDWR, 0660);
-
 }
 
 ResponseModel logout(int userId, UserModel userModel)

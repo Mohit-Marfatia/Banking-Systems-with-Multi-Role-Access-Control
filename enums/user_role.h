@@ -1,3 +1,6 @@
+#ifndef USER_ROLE_H
+#define USER_ROLE_H
+
 typedef enum
 {
     SUPERADMIN,
@@ -28,3 +31,5 @@ const char *getRoleName(UserRole role)
         return "UNKNOWN";
     }
 }
+
+#endif

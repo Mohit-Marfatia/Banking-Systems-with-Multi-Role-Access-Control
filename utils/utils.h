@@ -4,6 +4,45 @@
 #include <stdio.h>
 #include <termios.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include "../models/user_model.h"
+#include "../models/account_model.h"
+
+int lockRecordUserDb(int fd, int id, int lock_type)
+{
+    struct flock fl;
+    fl.l_type = lock_type;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = id * sizeof(UserModel);
+    fl.l_len = sizeof(UserModel);
+    fl.l_pid = getpid();
+
+    return fcntl(fd, F_SETLKW, &fl);
+}
+
+int lockRecordDbInfo(int fd, int lock_type)
+{
+    struct flock fl;
+    fl.l_type = lock_type;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = 0;
+    fl.l_len = 0;
+    fl.l_pid = getpid();
+
+    return fcntl(fd, F_SETLKW, &fl);
+}
+
+int lockRecordAccountDb(int fd, int id, int lock_type)
+{
+    struct flock fl;
+    fl.l_type = lock_type;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = id * sizeof(AccountModel);
+    fl.l_len = sizeof(AccountModel);
+    fl.l_pid = getpid();
+
+    return fcntl(fd, F_SETLKW, &fl);
+}
 
 void hidePasswordInput(char *password, int size)
 {
