@@ -13,6 +13,7 @@
 #include "utils/menus/admin_menu.h"
 #include "models/user_auth_model.h"
 #include "models/response_model.h"
+#include "helper/auth_controller.h"
 
 int main()
 {
@@ -32,18 +33,20 @@ int main()
     UserModel user;
     UserAuthModel userAuthModel;
 
-    while(flag){
+    while (flag)
+    {
         // Clear the buffer before reusing it
         memset(buffer, 0, sizeof(buffer));
         read(sd, buffer, sizeof(buffer));
 
+                // printf("%s | %s\n", buffer, displayUserLogin);
         if (strcmp(buffer, displayUserLogin) == 0)
         {
             userAuthModel = userLoginDetails();
             user = userAuthModel.user;
 
             write(sd, &userAuthModel, sizeof(userAuthModel));
-            
+
             if (userAuthModel.operation == ERROR)
             {
                 printf("\nPlease enter a correct option!\n");
@@ -69,10 +72,10 @@ int main()
 
             write(sd, &userAuthModel, sizeof(userAuthModel));
             if (userAuthModel.operation == ERROR)
-                {
+            {
                 printf("\nPlease enter a correct option!\n");
-                    continue;
-                }
+                continue;
+            }
             else if (userAuthModel.operation == LOGOUT)
             {
                 continue;
@@ -89,24 +92,33 @@ int main()
                 printf("%s", addUserResponseModel.responseMessage);
             }
             else if (userAuthModel.operation == MODIFY_ADMIN || userAuthModel.operation == MODIFY_MANAGER || userAuthModel.operation == MODIFY_EMPLOYEE || userAuthModel.operation == MODIFY_CUSTOMER)
-            {
-                ResponseModel modifyUserResponseModel;
-                read(sd, &modifyUserResponseModel, sizeof(modifyUserResponseModel));
-                if(modifyUserResponseModel.statusCode == 400){
-                    printf("%s", modifyUserResponseModel.responseMessage);
-                    continue;
+            {   
+                memset(buffer, 0, sizeof(buffer));
+                read(sd, buffer, sizeof(buffer));
+                // printf("%s | %s\n", buffer, printManagerUsers);
+                if (strcmp(buffer, printAdminUsers) == 0)
+                {
+                    readAllAdmin();
                 }
-                else {
-                    UserModel originalModel;
-                    userModelFromString(modifyUserResponseModel.serverMessage, &originalModel);
-                    UserModel modifiedUser = modifyUserDetails(originalModel);
-                    write(sd, &modifiedUser, sizeof(modifiedUser));
-
-                    read(sd, &modifyUserResponseModel, sizeof(modifyUserResponseModel));
-
-                    printf("%s", modifyUserResponseModel.responseMessage);
+                else if (strcmp(buffer, printManagerUsers) == 0)
+                {
+                    readAllManagers();
                 }
-                
+                else if (strcmp(buffer, printEmployeeUsers) == 0)
+                {
+                    readAllEmployees();
+                }
+                else if (strcmp(buffer, printCustomerUsers) == 0)
+                {
+                    readAllCustomers();
+                }
+
+                UserModel modifiedModel = modifyUserDetails();
+                write(sd, &modifiedModel, sizeof(UserModel));
+                ResponseModel updateResponse;
+                read(sd, &updateResponse, sizeof(ResponseModel));
+
+                printf("%s\n", updateResponse.responseMessage);
             }
         }
     }

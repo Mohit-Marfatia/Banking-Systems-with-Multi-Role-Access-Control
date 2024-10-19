@@ -20,7 +20,7 @@ int main() {
     // close(fd);
     // UserModel user;
     // user.user_id = -1;
-    // user.accStatus = ENABLED;
+    // user.accStatus = ACTIVATED;
     // user.role = SUPERADMIN;
     // strcpy(user.username, "su");
     // strcpy(user.password, "0");
@@ -29,7 +29,7 @@ int main() {
     // createUser(user);
 
     // user.user_id = -1;
-    // user.accStatus = ENABLED;
+    // user.accStatus = ACTIVATED;
     // user.role = ADMIN;
     // strcpy(user.username, "admin1");
     // strcpy(user.password, "admin1");
@@ -37,7 +37,7 @@ int main() {
 
     // createUser(user);
 
-    // readAllUsers();
-    readAllManagers();
+    readAllUsers();
+    // readAllAdmin();
     return 0;
 }

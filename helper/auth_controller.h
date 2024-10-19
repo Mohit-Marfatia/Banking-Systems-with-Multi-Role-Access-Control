@@ -339,6 +339,7 @@ void *task3(void *arg)
 int createUser(UserModel user)
 {
     user.user_id = getUserIdInformation(ALL);
+    user.isLoggedIn = false;
 
     // Open user database file
     int fd = open(userDatabase, O_RDWR | O_CREAT, 0666);
@@ -519,7 +520,7 @@ ResponseModel login(int userId, UserModel userModel)
     lock_record(fd, userId, F_UNLCK);
     close(fd);
 
-    if (user.accStatus == DISABLED)
+    if (user.accStatus == DEACTIVATED)
     {
 
         responseModel.statusCode = 400;
@@ -560,7 +561,7 @@ ResponseModel updateUser(int userId, UserModel userModel)
     }
 
     // Append user data to the file
-    lseek(fd, userId, SEEK_SET);
+    lseek(fd, userId * sizeof(UserModel), SEEK_SET);
     if (write(fd, &userModel, sizeof(UserModel)) != sizeof(UserModel))
     {
         strcpy(responseModel.responseMessage, "Error writing to file");
@@ -574,6 +575,37 @@ ResponseModel updateUser(int userId, UserModel userModel)
     responseModel.statusCode = 200;
     strcpy(responseModel.responseMessage, "Upadated user!");
     return responseModel;
+}
+
+UserModel getUserModelFromId(int userId)
+{
+    UserModel userModel;
+    int fd = open(userDatabase, O_RDWR);
+    if (fd < 0)
+    {
+        close(fd);
+    }
+    if (lock_record(fd, userId, F_WRLCK) == -1)
+    {
+        close(fd);
+    }
+
+    // Append user data to the file
+    lseek(fd, userId * sizeof(UserModel), SEEK_SET);
+    if (read(fd, &userModel, sizeof(UserModel)) != sizeof(UserModel))
+    {
+        close(fd);
+    }
+
+    lock_record(fd, userId, F_UNLCK);
+    close(fd);
+
+    return userModel;
+}
+
+void changeRole(UserModel userModel, UserRole userRole){
+    int fd = open(userDatabase, O_RDWR, 0660);
+
 }
 
 ResponseModel logout(int userId, UserModel userModel)
@@ -610,41 +642,48 @@ void readAllUsers()
                    getAccountStatus(user.accStatus));
         }
     }
+    close(fd);
 }
-
 
 void readAllAdmin()
 {
     UserIdModel user;
+    UserModel userModel;
     int fd = open(adminDatabase, O_RDONLY, 0600);
     // Move to the beginning of the file
     lseek(fd, 0, SEEK_SET);
 
     printf("Listing all admins:\n");
-    printf("\n%-10s %-20s\n", "ID", "Username");
+    printf("\n%-10s %-20s %-15s %-10s %-10s\n", "ID", "Username", "Role", "LoggedIn", "Status");
     printf("-------------------------------------------------------------------\n");
     // Read the file record by record
     while (read(fd, &user, sizeof(UserIdModel)) == sizeof(UserIdModel))
     {
         if (user.user_id != -1)
         { // Only display records that are not marked as deleted
-
-            printf("%-10d %-20s\n",
-                   user.user_id,
-                   user.username);
+            userModel = getUserModelFromId(user.user_id);
+            printf("%-10d %-20s %-15s %-10s %-10s\n",
+                   userModel.user_id,
+                   userModel.username,
+                   getRoleName(userModel.role),
+                   userModel.isLoggedIn ? "true" : "false",
+                   getAccountStatus(userModel.accStatus));
         }
     }
+
+    close(fd);
 }
 
 void readAllManagers()
 {
     UserIdModel user;
+    UserModel userModel;
     int fd = open(managerDatabase, O_RDONLY, 0600);
     // Move to the beginning of the file
     lseek(fd, 0, SEEK_SET);
 
     printf("Listing all managers:\n");
-    printf("\n%-10s %-20s\n", "ID", "Username");
+    printf("\n%-10s %-20s %-15s %-10s %-10s\n", "ID", "Username", "Role", "LoggedIn", "Status");
     printf("-------------------------------------------------------------------\n");
     // Read the file record by record
     while (read(fd, &user, sizeof(UserIdModel)) == sizeof(UserIdModel))
@@ -652,22 +691,28 @@ void readAllManagers()
         if (user.user_id != -1)
         { // Only display records that are not marked as deleted
 
-            printf("%-10d %-20s\n",
-                   user.user_id,
-                   user.username);
+            userModel = getUserModelFromId(user.user_id);
+            printf("%-10d %-20s %-15s %-10s %-10s\n",
+                   userModel.user_id,
+                   userModel.username,
+                   getRoleName(userModel.role),
+                   userModel.isLoggedIn ? "true" : "false",
+                   getAccountStatus(userModel.accStatus));
         }
     }
+    close(fd);
 }
 
 void readAllEmployees()
 {
     UserIdModel user;
+    UserModel userModel;
     int fd = open(employeeDatabase, O_RDONLY, 0600);
     // Move to the beginning of the file
     lseek(fd, 0, SEEK_SET);
 
     printf("Listing all emplyees:\n");
-    printf("\n%-10s %-20s\n", "ID", "Username");
+    printf("\n%-10s %-20s %-15s %-10s %-10s\n", "ID", "Username", "Role", "LoggedIn", "Status");
     printf("-------------------------------------------------------------------\n");
     // Read the file record by record
     while (read(fd, &user, sizeof(UserIdModel)) == sizeof(UserIdModel))
@@ -675,22 +720,28 @@ void readAllEmployees()
         if (user.user_id != -1)
         { // Only display records that are not marked as deleted
 
-            printf("%-10d %-20s\n",
-                   user.user_id,
-                   user.username);
+            userModel = getUserModelFromId(user.user_id);
+            printf("%-10d %-20s %-15s %-10s %-10s\n",
+                   userModel.user_id,
+                   userModel.username,
+                   getRoleName(userModel.role),
+                   userModel.isLoggedIn ? "true" : "false",
+                   getAccountStatus(userModel.accStatus));
         }
     }
+    close(fd);
 }
 
 void readAllCustomers()
 {
     UserIdModel user;
+    UserModel userModel;
     int fd = open(customerDatabase, O_RDONLY, 0600);
     // Move to the beginning of the file
     lseek(fd, 0, SEEK_SET);
 
     printf("Listing all customers:\n");
-    printf("\n%-10s %-20s\n", "ID", "Username");
+    printf("\n%-10s %-20s %-15s %-10s %-10s\n", "ID", "Username", "Role", "LoggedIn", "Status");
     printf("-------------------------------------------------------------------\n");
     // Read the file record by record
     while (read(fd, &user, sizeof(UserIdModel)) == sizeof(UserIdModel))
@@ -698,11 +749,16 @@ void readAllCustomers()
         if (user.user_id != -1)
         { // Only display records that are not marked as deleted
 
-            printf("%-10d %-20s\n",
-                   user.user_id,
-                   user.username);
+            userModel = getUserModelFromId(user.user_id);
+            printf("%-10d %-20s %-15s %-10s %-10s\n",
+                   userModel.user_id,
+                   userModel.username,
+                   getRoleName(userModel.role),
+                   userModel.isLoggedIn ? "true" : "false",
+                   getAccountStatus(userModel.accStatus));
         }
     }
+    close(fd);
 }
 
 #endif

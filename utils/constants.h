@@ -21,4 +21,12 @@ const char *employeeDatabase = "db/user/employee_database.bin";
 
 const char *customerDatabase = "db/user/customer_database.bin";
 
+const char *printAdminUsers = "printAdminUsers";
+
+const char *printManagerUsers = "printManagerUsers";
+
+const char *printEmployeeUsers = "printEmployeeUsers";
+
+const char *printCustomerUsers = "printCustomerUsers";
+
 #endif

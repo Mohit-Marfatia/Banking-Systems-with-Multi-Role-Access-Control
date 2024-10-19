@@ -96,7 +96,7 @@ int main()
                         else
                         {
                             printf("UserId: %d\n", userModel.user_id);
-                            userModel.accStatus = ENABLED;
+                            userModel.accStatus = ACTIVATED;
                             userModel.isLoggedIn = true;
                             updateUser(userId, userModel);
                             strcpy(loginResponse.serverMessage, "");
@@ -145,7 +145,30 @@ int main()
                                     }
                                     else if (userAuthModel.operation == MODIFY_ADMIN || userAuthModel.operation == MODIFY_MANAGER || userAuthModel.operation == MODIFY_EMPLOYEE || userAuthModel.operation == MODIFY_CUSTOMER)
                                     {
-                                        
+                                        switch (userAuthModel.operation)
+                                        {
+                                        case MODIFY_ADMIN:
+                                            write(clientSD, printAdminUsers, strlen(printAdminUsers)+1);
+                                            break;
+                                        case MODIFY_MANAGER:
+                                            write(clientSD, printManagerUsers, strlen(printManagerUsers)+1);
+                                            break;
+                                        case MODIFY_EMPLOYEE:
+                                            write(clientSD, printEmployeeUsers, strlen(printEmployeeUsers)+1);
+                                            break;
+                                        case MODIFY_CUSTOMER:
+                                            write(clientSD, printCustomerUsers, strlen(printCustomerUsers)+1);
+                                            break;
+
+                                        default:
+                                            break;
+                                        }
+
+                                        UserModel modifiedModel;
+                                        read(clientSD, &modifiedModel, sizeof(UserModel));
+                                        ResponseModel updateResponse = updateUser(modifiedModel.user_id, modifiedModel);
+                                        write(clientSD, &updateResponse, sizeof(ResponseModel));
+
                                     }
                                 }
                             }

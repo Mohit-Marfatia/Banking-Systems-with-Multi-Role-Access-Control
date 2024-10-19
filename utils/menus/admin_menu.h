@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "../../models/user_auth_model.h"
+#include "../../helper/auth_controller.h"
 
 UserAuthModel printAdminMenu(UserModel user)
 {
@@ -183,7 +184,57 @@ UserAuthModel printAdminMenu(UserModel user)
         // strcpy(newUser.username, username);
         // strcpy(newUser.password, "");
         // newUser.user_id = -1;
-        // newUser.accStatus = ENABLED;
+        // newUser.accStatus = ACTIVATED;
+        // newUser.isLoggedIn = false;
+        // userAuthModel.user = newUser;
+        return userAuthModel;
+    } else if (choice == 2 && user.role == ADMIN)
+    {
+        printf("\n---Admin Menu Controls (Modify Customer/Employee details)---\n");
+        printf("1. Modify Manager Details\n");
+        printf("2. Modify Employee Details\n");
+        printf("3. Modify Customer Details\n");
+        printf("8. Logout\n");
+        printf("9. Exit\n");
+        // int options;
+
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice)
+        {
+        case 1:
+            userAuthModel.operation = MODIFY_MANAGER;
+            break;
+        case 2:
+            userAuthModel.operation = MODIFY_EMPLOYEE;
+            break;
+        case 3:
+            userAuthModel.operation = MODIFY_CUSTOMER;
+            break;
+        case 8:
+            userAuthModel.operation = LOGOUT;
+            userAuthModel.user = user;
+            return userAuthModel;
+            break;
+        case 9:
+            userAuthModel.operation = EXIT;
+            userAuthModel.user = user;
+            return userAuthModel;
+            break;
+        default:
+            userAuthModel.operation = ERROR;
+            return userAuthModel;
+        }
+
+        // char username[100];
+        // printf("Enter the correct username of the user you want to modify: ");
+        // scanf("%s", username);
+
+        // strcpy(newUser.username, username);
+        // strcpy(newUser.password, "");
+        // newUser.user_id = -1;
+        // newUser.accStatus = ACTIVATED;
         // newUser.isLoggedIn = false;
         // userAuthModel.user = newUser;
         return userAuthModel;
@@ -192,7 +243,7 @@ UserAuthModel printAdminMenu(UserModel user)
     {
         // printf("---here@admin_menu---");
         userAuthModel.operation = LOGOUT;
-        user.accStatus = ENABLED;
+        user.accStatus = ACTIVATED;
         userAuthModel.user = user;
         // printUserModel(userAuthModel.user);
         return userAuthModel;
@@ -201,7 +252,7 @@ UserAuthModel printAdminMenu(UserModel user)
     {
         // printf("---here@admin_menu---");
         userAuthModel.operation = EXIT;
-        user.accStatus = ENABLED;
+        user.accStatus = ACTIVATED;
         userAuthModel.user = user;
         // printUserModel(userAuthModel.user);
         return userAuthModel;
@@ -211,13 +262,17 @@ UserAuthModel printAdminMenu(UserModel user)
     }
 }
 
-UserModel modifyUserDetails(UserModel userModel)
+UserModel modifyUserDetails()
 {
-    // int userModel;
-    // userModel.user_id = userId;
+    UserModel userModel;
+    int userId;
+    printf("\nEnter the id of the user you want to modify details of:");
+    scanf("%d", &userId);
+    userModel = getUserModelFromId(userId);
     printf("\n---Admin Menu Controls (Modify Customer/Employee details)---\n");
     printf("1. Modify User Role\n");
     printf("2. Change Password\n");
+    printf("3. Activate/Deactivate\n");
     printf("8. Logout\n");
     printf("9. Exit\n");
     int options;
@@ -228,6 +283,11 @@ UserModel modifyUserDetails(UserModel userModel)
     switch (options)
     {
     case 1:
+        char temp[100];
+        strcpy(temp, userModel.username);
+        strcpy(userModel.username, "dummy");
+        ResponseModel response = updateUser(userModel.user_id, userModel);
+        strcpy(userModel.username, temp);
         printf("\n---Admin Menu Controls (Modify Customer/Employee details)---\n");
         printf(" Modify User Role to:\n");
         printf("1. Admin\n");
@@ -255,6 +315,9 @@ UserModel modifyUserDetails(UserModel userModel)
         default:
             break;
         }
+        int create = createUser(userModel);
+        userModel.user_id = -1;
+        strcpy(userModel.username, "dummy");
         break;
     case 2:
         char password[100];
@@ -262,6 +325,10 @@ UserModel modifyUserDetails(UserModel userModel)
         hidePasswordInput(password, sizeof(password));
         strcpy(userModel.password, password);
         break;
+    case 3:
+        printf("Press 1 to ACTIVATE and 2 to DEACTIVATE\n");
+        scanf("%d", &options);
+        userModel.accStatus = options == 1 ? ACTIVATED : DEACTIVATED;
     default:
         break;
     }
