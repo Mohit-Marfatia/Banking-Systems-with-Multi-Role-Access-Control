@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include "../../models/user_model.h"
 #include "../../models/user_auth_model.h"
-#include "../../utils/utils.h"
+#include "../../definitions.h"
 
-UserAuthModel userLoginDetails()
+UserAuthModel userLoginMenu()
 {
     int choice;
     UserModel newUser;
@@ -41,7 +41,7 @@ UserAuthModel userLoginDetails()
         userAuthModel.operation = EXIT;
         return userAuthModel;
     }
-    else if (choice == 2)
+    else
     {
         printf("\n---Login as (Bank Employee):---\n");
         printf("1. Login as Super Admin\n");
@@ -50,29 +50,6 @@ UserAuthModel userLoginDetails()
         printf("4. Login as Employee\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
-
-        switch (choice)
-        {
-        case 1:
-            newUser.role = SUPERADMIN;
-            userAuthModel.operation = LOGIN;
-            break;
-        case 2:
-            newUser.role = ADMIN;
-            userAuthModel.operation = LOGIN;
-            break;
-        case 3:
-            newUser.role = MANAGER;
-            userAuthModel.operation = LOGIN;
-            break;
-        case 4:
-            newUser.role = EMPLOYEE;
-            userAuthModel.operation = LOGIN;
-            break;
-        default:
-            userAuthModel.operation = ERROR;
-            return userAuthModel;
-        }
 
         char username[100], password[100];
         printf("Enter username: ");
@@ -83,11 +60,30 @@ UserAuthModel userLoginDetails()
         strcpy(newUser.username, username);
         strcpy(newUser.password, password);
 
+        switch (choice)
+        {
+        case 1:
+            newUser.role = SUPERADMIN;
             userAuthModel.user = newUser;
-
+            userAuthModel.operation = LOGIN;
             return userAuthModel;
-    } else{
-        userAuthModel.operation = ERROR;
-        return userAuthModel;
+        case 2:
+            newUser.role = ADMIN;
+            userAuthModel.user = newUser;
+            userAuthModel.operation = LOGIN;
+            return userAuthModel;
+        case 3:
+            newUser.role = MANAGER;
+            userAuthModel.user = newUser;
+            userAuthModel.operation = LOGIN;
+            return userAuthModel;
+        case 4:
+            newUser.role = EMPLOYEE;
+            userAuthModel.user = newUser;
+            userAuthModel.operation = LOGIN;
+            return userAuthModel;
+        default:
+            break;
+        }
     }
 }

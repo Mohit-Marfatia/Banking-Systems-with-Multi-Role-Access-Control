@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "../../models/user_auth_model.h"
+#include "../../definitions.h"
 
 UserAuthModel printAdminMenu(UserModel user)
 {
@@ -11,7 +12,7 @@ UserAuthModel printAdminMenu(UserModel user)
     printf("2. Modify Customer/Employee Details\n");
     // printf("3. Manage User Roles\n");
     // printf("4. Change Password\n");
-    printf("8. Logout\n");
+    printf("3. Logout\n");
     printf("9. Exit\n");
 
     int choice;
@@ -25,7 +26,7 @@ UserAuthModel printAdminMenu(UserModel user)
         printf("2. Add an Manager\n");
         printf("3. Add an Employee\n");
         printf("4. Add an Customer\n");
-        printf("8. Logout\n");
+        printf("5. Logout\n");
         printf("9. Exit\n");
         // int options;
 
@@ -50,7 +51,7 @@ UserAuthModel printAdminMenu(UserModel user)
             userAuthModel.operation = ADD_CUSTOMER;
             newUser.role = CUSTOMER;
             break;
-        case 8:
+        case 5:
             userAuthModel.operation = LOGOUT;
             userAuthModel.user = user;
             return userAuthModel;
@@ -62,8 +63,7 @@ UserAuthModel printAdminMenu(UserModel user)
             return userAuthModel;
             break;
         default:
-            userAuthModel.operation = ERROR;
-            return userAuthModel;
+            break;
         }
 
         char username[100], password[100];
@@ -84,7 +84,7 @@ UserAuthModel printAdminMenu(UserModel user)
         printf("1. Add an Manager\n");
         printf("2. Add an Employee\n");
         printf("3. Add an Customer\n");
-        printf("8. Logout\n");
+        printf("4. Logout\n");
         printf("9. Exit\n");
         // int options;
 
@@ -104,7 +104,7 @@ UserAuthModel printAdminMenu(UserModel user)
             userAuthModel.operation = ADD_CUSTOMER;
             newUser.role = CUSTOMER;
             break;
-        case 8:
+        case 4:
             userAuthModel.operation = LOGOUT;
             userAuthModel.user = user;
             return userAuthModel;
@@ -116,8 +116,7 @@ UserAuthModel printAdminMenu(UserModel user)
             return userAuthModel;
             break;
         default:
-            userAuthModel.operation = ERROR;
-            return userAuthModel;
+            break;
         }
 
         char username[100], password[100];
@@ -139,7 +138,7 @@ UserAuthModel printAdminMenu(UserModel user)
         printf("2. Modify Manager Details\n");
         printf("3. Modify Employee Details\n");
         printf("4. Modify Customer Details\n");
-        printf("8. Logout\n");
+        printf("5. Logout\n");
         printf("9. Exit\n");
         // int options;
 
@@ -160,7 +159,7 @@ UserAuthModel printAdminMenu(UserModel user)
         case 4:
             userAuthModel.operation = MODIFY_CUSTOMER;
             break;
-        case 8:
+        case 5:
             userAuthModel.operation = LOGOUT;
             userAuthModel.user = user;
             return userAuthModel;
@@ -172,23 +171,22 @@ UserAuthModel printAdminMenu(UserModel user)
             return userAuthModel;
             break;
         default:
-            userAuthModel.operation = ERROR;
-            return userAuthModel;
+            break;
         }
 
-        // char username[100];
-        // printf("Enter the correct username of the user you want to modify: ");
-        // scanf("%s", username);
+        char username[100];
+        printf("Enter the correct username of the user you want to modify: ");
+        scanf("%s", username);
 
-        // strcpy(newUser.username, username);
-        // strcpy(newUser.password, "");
-        // newUser.user_id = -1;
-        // newUser.accStatus = ENABLED;
-        // newUser.isLoggedIn = false;
-        // userAuthModel.user = newUser;
+        strcpy(newUser.username, username);
+        strcpy(newUser.password, "");
+        newUser.user_id = -1;
+        newUser.accStatus = ENABLED;
+        newUser.isLoggedIn = false;
+        userAuthModel.user = newUser;
         return userAuthModel;
     }
-    else if (choice == 8)
+    else if (choice == 3)
     {
         // printf("---here@admin_menu---");
         userAuthModel.operation = LOGOUT;
@@ -205,9 +203,6 @@ UserAuthModel printAdminMenu(UserModel user)
         userAuthModel.user = user;
         // printUserModel(userAuthModel.user);
         return userAuthModel;
-    } else {
-        userAuthModel.operation = ERROR;
-        return userAuthModel;
     }
 }
 
@@ -218,7 +213,7 @@ UserModel modifyUserDetails(UserModel userModel)
     printf("\n---Admin Menu Controls (Modify Customer/Employee details)---\n");
     printf("1. Modify User Role\n");
     printf("2. Change Password\n");
-    printf("8. Logout\n");
+    printf("5. Logout\n");
     printf("9. Exit\n");
     int options;
 

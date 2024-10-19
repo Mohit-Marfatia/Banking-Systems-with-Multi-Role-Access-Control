@@ -1,11 +1,10 @@
 typedef enum
 {
-    SUPERADMIN,
-    ADMIN,
-    MANAGER,
-    EMPLOYEE,
-    CUSTOMER,
-    ALL 
+    SUPERADMIN, // 0
+    ADMIN,      // 1
+    MANAGER,    // 2
+    EMPLOYEE,   // 3
+    CUSTOMER    // 4
 } UserRole;
 
 const char *getRoleName(UserRole role)
@@ -22,8 +21,6 @@ const char *getRoleName(UserRole role)
         return "EMPLOYEE";
     case CUSTOMER:
         return "CUSTOMER";
-    case ALL:
-        return "ALL";
     default:
         return "UNKNOWN";
     }

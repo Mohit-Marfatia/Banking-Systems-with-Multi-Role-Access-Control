@@ -1,45 +1,43 @@
-#include "helper/auth_controller.h"
-#include "models/user_model.h"
+#include <stdio.h>
 #include <string.h>
-#include "definitions.h"
+#include <stdbool.h>
+#include "models/user_model.h"
+#include "models/user_information_model.h"
+#include "helper/auth_controller.h"
 
-int main()
-{
-    const char *filename = "db/user_database.bin";
+int main() {
+    
+    // UserInformationModel model;
+    // model.adminCount = 0;
+    // model.managerCount = 0;
+    // model.employeeCount = 0;
+    // model.customerCount = 0;
+    // model.totalUsers = 0;
 
-    // Example users
-//     UserModel user1;
+    // int fd = open(userInformationDatabase, O_RDWR | O_CREAT, 0666), id;
+    // lseek(fd, 0, SEEK_SET);
+    // write(fd, &model, sizeof(model));
+    // close(fd);
+    // UserModel user;
+    // user.user_id = -1;
+    // user.accStatus = ENABLED;
+    // user.role = SUPERADMIN;
+    // strcpy(user.username, "su");
+    // strcpy(user.password, "0");
+    // user.isLoggedIn = false;
 
-//     user1.user_id = 0;
-//     user1.role = SUPERADMIN;
-//     strcpy(user1.username, "super_admin");
-//     strcpy(user1.password, "Abcd123$");
-//     user1.isLoggedIn = false;
-//     user1.accStatus = ENABLED;
+    // createUser(user);
 
-//     // Create (Add users)
-//     createUser(filename, user1);
-//     // updateUser(filename, 0, user1);
+    // user.user_id = -1;
+    // user.accStatus = ENABLED;
+    // user.role = ADMIN;
+    // strcpy(user.username, "admin1");
+    // strcpy(user.password, "admin1");
+    // user.isLoggedIn = false;
 
-//     for(int i = 1; i<= 500; i++){
-//         // printf("%d ", i);
-//         user1.user_id = i;
-//         if(i >= ADMIN_ID_MIN && i <= ADMIN_ID_MAX){
-//                 user1.role = ADMIN;
-//         } else if(i >= MANAGER_ID_MIN && i <= MANAGER_ID_MAX){
-//                 user1.role = MANAGER;
-//         } else if(i >= EMPLOYEE_ID_MIN && i <= EMPLOYEE_ID_MAX){
-//                 user1.role = EMPLOYEE;
-//         } else if(i >= CUSTOMER_ID_MIN){
-//                 user1.role = CUSTOMER;
-//         }
-//         strcpy(user1.username, "dummy");
-//         strcpy(user1.password, "dummy");
-//         user1.isLoggedIn = false;
-//         user1.accStatus = DISABLED;
+    // createUser(user);
 
-//         createUser(filename, user1);
-//     }
-
-    readUsers(filename);
+    // readAllUsers();
+    readAllManagers();
+    return 0;
 }

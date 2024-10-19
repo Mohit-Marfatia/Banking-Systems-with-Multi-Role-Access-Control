@@ -7,12 +7,12 @@
 #include <string.h>
 #include <termios.h>
 #include <stdbool.h>
-#include "utils/utils.h"
+#include "definitions.h"
 #include "utils/constants.h"
 #include "utils/menus/user_login_menu.h"
 #include "utils/menus/admin_menu.h"
-#include "models/user_auth_model.h"
 #include "models/response_model.h"
+#include "models/user_auth_model.h"
 
 int main()
 {
@@ -31,28 +31,24 @@ int main()
     bool flag = true;
     UserModel user;
     UserAuthModel userAuthModel;
-
-    while(flag){
+    const char *displayUL = displayUserLogin();
+    const char *displayAM = displayAdminMenu();
+    do
+    {
         // Clear the buffer before reusing it
         memset(buffer, 0, sizeof(buffer));
         read(sd, buffer, sizeof(buffer));
-
-        if (strcmp(buffer, displayUserLogin) == 0)
+        // printf("%s", buffer);
+        if (strcmp(buffer, displayUL) == 0)
         {
-            userAuthModel = userLoginDetails();
+            userAuthModel = userLoginMenu();
             user = userAuthModel.user;
 
             write(sd, &userAuthModel, sizeof(userAuthModel));
-            
-            if (userAuthModel.operation == ERROR)
-            {
-                printf("\nPlease enter a correct option!\n");
-                continue;
-            }
-            else if (userAuthModel.operation == EXIT)
+            if (userAuthModel.operation == EXIT)
             {
                 flag = false;
-                continue;
+                break;
             }
 
             ResponseModel response;
@@ -60,7 +56,7 @@ int main()
 
             printf("%s\n", response.responseMessage);
         }
-        else if (strcmp(buffer, displayAdminMenu) == 0)
+        else if (strcmp(buffer, displayAM) == 0)
         {
             UserAuthModel userAuthModel = printAdminMenu(user);
             // printf("---------here @ debug ---------------\n");
@@ -68,12 +64,7 @@ int main()
             // printUserModel(userAuthModel.user);
 
             write(sd, &userAuthModel, sizeof(userAuthModel));
-            if (userAuthModel.operation == ERROR)
-                {
-                printf("\nPlease enter a correct option!\n");
-                    continue;
-                }
-            else if (userAuthModel.operation == LOGOUT)
+            if (userAuthModel.operation == LOGOUT)
             {
                 continue;
             }
@@ -109,7 +100,7 @@ int main()
                 
             }
         }
-    }
+    } while (flag);
 
     close(sd);
     printf("Exited successfully.\n");

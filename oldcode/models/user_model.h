@@ -20,8 +20,8 @@ typedef struct userModel
 void printUserModel(UserModel user)
 {
     printf("\nID: %d\n", user.user_id);
-    printf("Username: %s\n", user.username);
     printf("Role: %s\n", getRoleName(user.role));
+    printf("Username: %s\n", user.username);
     printf("isLoggedIn: %s\n", user.isLoggedIn ? "true" : "false");
     printf("accStatus: %s\n", getAccountStatus(user.accStatus));
 }

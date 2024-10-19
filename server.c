@@ -8,10 +8,11 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdbool.h>
-#include "definitions.h"
+
+#include "utils/utils.h"
 #include "utils/constants.h"
-#include "models/user_model.h"
 #include "models/user_auth_model.h"
+#include "models/response_model.h"
 #include "helper/auth_controller.h"
 
 int main()
@@ -19,7 +20,7 @@ int main()
     struct sockaddr_in server, client;
     int serverSD, sz, clientSD;
     char buffer[100];
-    const char *filename = "db/user_database.bin";
+    const char *filename = "db/user/user_database.bin";
 
     serverSD = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -32,44 +33,37 @@ int main()
     sz = sizeof(client);
 
     int choice, childPid;
-    const char *enterUname = enterUsername();
-    const char *enterPw = enterPassword();
-
+    bool flag = true, userLoggedIn = false;
     UserModel userModel;
     UserAuthModel userAuthModel;
-    bool flag = true;
-    bool userLoggedIn = false;
-    const char *displayUL = displayUserLogin();
-    const char *displayAM = displayAdminMenu();
+
+    char str[100] = "Connection established";
     while (1)
     {
         clientSD = accept(serverSD, (struct sockaddr *)(&client), &sz);
 
         if ((childPid = fork()) == 0)
         {
+            printf("Connection established with a client\n");
+            write(clientSD, str, sizeof(str));
 
-            do
+            while (flag)
             {
                 // Send the login menu to the client
-                write(clientSD, displayUL, strlen(displayUL) + 1);
+                write(clientSD, displayUserLogin, strlen(displayUserLogin) + 1);
 
-                // Read the user's input (UserModel)
+                // Read the user's input for login
                 read(clientSD, &userAuthModel, sizeof(userAuthModel));
                 userModel = userAuthModel.user;
-                // Handle user exit
-                if (userAuthModel.operation == EXIT)
+
+                if (userAuthModel.operation == ERROR)
                 {
-                    // if (userModel.isLoggedIn)
-                    // {
-                    //     ResponseModel responseModel = getUserId(filename, userModel);
-                    //     // char serverMsg[100];
-                    //     int userId = atoi(responseModel.serverMessage);
-                    //     userModel.user_id = userId;
-                    //     userModel.isLoggedIn = false;
-                    //     updateUser(filename, userId, userModel);
-                    // }
+                    continue;
+                }
+                else if (userAuthModel.operation == EXIT)
+                {
                     flag = false;
-                    printf("Client Exited successfully.\n");
+                    printf("\nClient Exited successfully.\n");
                     close(clientSD);
                     continue;
                 }
@@ -80,101 +74,87 @@ int main()
                     printf("Username: %s\n", userModel.username);
                     printf("Password: %s\n", userModel.password);
 
-                    ResponseModel responseModel = getUserId(filename, userAuthModel);
+                    ResponseModel responseModel = getUserId(userAuthModel);
                     // char serverMsg[100];
-                    // printf("-----%d----", responseModel.statusCode);
-                    int userId = atoi(responseModel.serverMessage);
+                    printf("-----%d----\n", responseModel.statusCode);
                     // printf("-----------------%d------\n", userId);
                     if (responseModel.statusCode == 400)
                     {
+                        write(clientSD, &responseModel, sizeof(responseModel));
                         continue;
                     }
                     else
                     {
+                        int userId = atoi(responseModel.serverMessage);
                         userModel.user_id = userId;
-                        printf("UserId: %d\n", userModel.user_id);
-                        userModel.accStatus = ENABLED;
-                        userModel.isLoggedIn = true;
-                        updateUser(filename, userId, userModel);
-                        strcpy(responseModel.serverMessage, "");
-                        // readUsers(filename);
-                        write(clientSD, &responseModel, sizeof(responseModel));
-                        userLoggedIn = true;
-                        while (userLoggedIn)
+                        ResponseModel loginResponse = login(userId, userModel);
+                        if (loginResponse.statusCode == 400)
                         {
-                            if (userModel.role == SUPERADMIN || userModel.role == ADMIN)
+                            write(clientSD, &loginResponse, sizeof(loginResponse));
+                            continue;
+                        }
+                        else
+                        {
+                            printf("UserId: %d\n", userModel.user_id);
+                            userModel.accStatus = ENABLED;
+                            userModel.isLoggedIn = true;
+                            updateUser(userId, userModel);
+                            strcpy(loginResponse.serverMessage, "");
+                            // readUsers(filename);
+                            write(clientSD, &loginResponse, sizeof(loginResponse));
+                            userLoggedIn = true;
+
+                            while (userLoggedIn)
                             {
-                                write(clientSD, displayAM, strlen(displayAM) + 1);
+                                if (userModel.role == SUPERADMIN || userModel.role == ADMIN)
+                                {
+                                    write(clientSD, displayAdminMenu, strlen(displayAdminMenu) + 1);
 
-                                UserAuthModel userAuthModel;
-                                read(clientSD, &userAuthModel, sizeof(userAuthModel));
-                                printf("\nOpr: %s\n", getOperationName(userAuthModel.operation));
-                                // printUserModel(userAuthModel.user);
+                                    UserAuthModel userAuthModel;
+                                    read(clientSD, &userAuthModel, sizeof(userAuthModel));
+                                    printf("\nOpr: %s\n", getOperationName(userAuthModel.operation));
+                                    // printUserModel(userAuthModel.user);
 
-                                if (userAuthModel.operation == LOGOUT)
-                                {
-                                    ResponseModel getIdLResponseModel = getUserId(filename, userAuthModel);
-                                    // char serverMsg[100];
-                                    int userId = atoi(getIdLResponseModel.serverMessage);
-                                    userModel.isLoggedIn = false;
-                                    updateUser(filename, userId, userModel);
-                                    printf("\n Logout Successful!\n");
-                                    userLoggedIn = false;
-                                    continue;
-                                    ;
-                                }
-                                else if (userAuthModel.operation == EXIT)
-                                {
-                                    ResponseModel getIdResponseModel = getUserId(filename, userAuthModel);
-                                    // char serverMsg[100];
-                                    int userId = atoi(getIdResponseModel.serverMessage);
-                                    userModel.isLoggedIn = false;
-                                    updateUser(filename, userId, userModel);
-                                    userLoggedIn = false;
-                                    flag = false;
-                                    printf("Client Exited successfully.\n");
-                                    close(clientSD);
-                                    continue;
-                                }
-                                else if (userAuthModel.operation == ADD_ADMIN || userAuthModel.operation == ADD_MANAGER || userAuthModel.operation == ADD_EMPLOYEE || userAuthModel.operation == ADD_CUSTOMER)
-                                {
-                                    ResponseModel addUserResponseModel = createNewUser(filename, userAuthModel);
-                                    printf("%s", addUserResponseModel.responseMessage);
-                                    write(clientSD, &addUserResponseModel, sizeof(addUserResponseModel));
-                                }
-                                else if (userAuthModel.operation == MODIFY_ADMIN || userAuthModel.operation == MODIFY_MANAGER || userAuthModel.operation == MODIFY_EMPLOYEE || userAuthModel.operation == MODIFY_CUSTOMER)
-                                {
-                                    ResponseModel getIdResponseModel = getUserId(filename, userAuthModel);
-                                    // char serverMsg[100];
-                                    // UserModel originalData;
-                                    // userModelFromString(getIdResponseModel.serverMessage, &originalData);
-                                    // char str[5]; // Ensure the array is large enough to hold the number
-                                    // sprintf(str, "%d", originalData.user_id); // Convert int to string
-
-                                    // send the original user data to client
-                                    write(clientSD, &getIdResponseModel, sizeof(getIdResponseModel));
-                                    if (getIdResponseModel.statusCode == 400)
+                                    if (userAuthModel.operation == ERROR)
                                     {
                                         continue;
                                     }
-                                    else
+                                    else if (userAuthModel.operation == LOGOUT)
                                     {
-                                        UserModel modifiedData;
-                                        read(clientSD, &modifiedData, sizeof(modifiedData));
-                                        ResponseModel responseModel = updateUser(filename, modifiedData.user_id, modifiedData);
-
-                                        write(clientSD, &responseModel, sizeof(responseModel));
+                                        logout(userModel.user_id, userModel);
+                                        printf("\n Logout Successful!\n");
+                                        userLoggedIn = false;
+                                        continue;
+                                    }
+                                    else if (userAuthModel.operation == EXIT)
+                                    {
+                                        logout(userModel.user_id, userModel);
+                                        userLoggedIn = false;
+                                        flag = false;
+                                        printf("Client Exited successfully.\n");
+                                        close(clientSD);
+                                        continue;
+                                    }
+                                    else if (userAuthModel.operation == ADD_ADMIN || userAuthModel.operation == ADD_MANAGER || userAuthModel.operation == ADD_EMPLOYEE || userAuthModel.operation == ADD_CUSTOMER)
+                                    {
+                                        createUser(userAuthModel.user);
+                                        ResponseModel addUserResponseModel;
+                                        strcpy(addUserResponseModel.responseMessage, "User Created Successfully");
+                                        addUserResponseModel.statusCode = 200;
+                                        write(clientSD, &addUserResponseModel, sizeof(addUserResponseModel));
+                                    }
+                                    else if (userAuthModel.operation == MODIFY_ADMIN || userAuthModel.operation == MODIFY_MANAGER || userAuthModel.operation == MODIFY_EMPLOYEE || userAuthModel.operation == MODIFY_CUSTOMER)
+                                    {
+                                        
                                     }
                                 }
                             }
                         }
                     }
                 }
-            } while (flag);
+            }
         }
     }
-
     close(serverSD);
-
     return 0;
 }

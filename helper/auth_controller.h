@@ -1,400 +1,708 @@
-#ifndef AUTH_CONTROLLER_H
-#define AUTH_CONTROLLER_H
+#ifndef AUTHCONTROLLER_H
+#define AUTHCONTROLLER_H
 
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include "../models/user_model.h"
+#include "../models/user_id_model.h"
+#include "../models/user_information_model.h"
 #include "../models/user_auth_model.h"
 #include "../models/response_model.h"
-#include "../definitions.h"
+#include "../utils/constants.h"
 
-// Function to lock file
-int lockFile(int fd, int lockType)
+int lock_record(int fd, int id, int lock_type)
 {
     struct flock fl;
-    fl.l_type = lockType; // Type of lock: F_RDLCK, F_WRLCK, F_UNLCK
+    fl.l_type = lock_type;
     fl.l_whence = SEEK_SET;
-    fl.l_start = 0;                  // Lock the whole file
-    fl.l_len = 0;                    // 0 means to lock the entire file
-    return fcntl(fd, F_SETLKW, &fl); // Apply the lock
+    fl.l_start = id * sizeof(UserModel);
+    fl.l_len = sizeof(UserModel);
+    fl.l_pid = getpid();
+
+    return fcntl(fd, F_SETLKW, &fl);
 }
 
-// Function to create a user and append it to the file
-int createUser(const char *filename, UserModel user)
+ResponseModel getUserId(UserAuthModel userAuthModel)
 {
-    int fd = open(filename, O_RDWR | O_CREAT, 0666); // Open file for reading and writing
-    if (fd < 0)
-    {
-        perror("Error opening file");
-        return -1;
-    }
+    int fd, id = -1;
+    char str[5];
 
-    // Apply exclusive write lock
-    if (lockFile(fd, F_WRLCK) == -1)
-    {
-        perror("Error locking file");
-        close(fd);
-        return -1;
-    }
-
-    // Append user data to the file
-    lseek(fd, 0, SEEK_END); // Move to the end of the file
-    if (write(fd, &user, sizeof(UserModel)) != sizeof(UserModel))
-    {
-        perror("Error writing to file");
-    }
-
-    // Unlock the file
-    lockFile(fd, F_UNLCK);
-
-    close(fd);
-    return 0;
-}
-
-ResponseModel createNewUser(const char *filename, UserAuthModel userAuthModel)
-{
-    ResponseModel response;
+    ResponseModel responseModel;
+    UserIdModel user;
     UserModel userModel = userAuthModel.user;
-    int fd = open(filename, O_RDWR); // Open file for reading
-    if (fd < 0)
+
+    if (strcmp(userModel.username, "su") == 0)
     {
-        response.statusCode = 400;
-        strcpy(response.responseMessage, "Error opening file\n");
-        return response;
+        id = 0;
+        sprintf(str, "%d", id); // Convert int to string
+        responseModel.statusCode = 200;
+        strcpy(responseModel.responseMessage, str);
+        return responseModel;
     }
 
-    // Apply shared read lock
-    if (lockFile(fd, F_RDLCK) == -1)
+    switch (userModel.role)
     {
-        close(fd);
-        response.statusCode = 400;
-        strcpy(response.responseMessage, "Error locking file\n");
-        return response;
-    }
-
-    UserModel user;
-    int id = -1, maxId;
-    if (userAuthModel.operation == ADD_ADMIN)
-    {
-        lseek(fd, ADMIN_ID_MIN * sizeof(UserModel), SEEK_SET);
-        maxId = ADMIN_ID_MIN - 1;
-    }
-    else if (userAuthModel.operation == ADD_MANAGER)
-    {
-        lseek(fd, MANAGER_ID_MIN * sizeof(UserModel), SEEK_SET);
-        maxId = MANAGER_ID_MIN - 1;
-    }
-    else if (userAuthModel.operation == ADD_EMPLOYEE)
-    {
-        lseek(fd, EMPLOYEE_ID_MIN * sizeof(UserModel), SEEK_SET);
-        maxId = EMPLOYEE_ID_MIN - 1;
-    }
-    else if (userAuthModel.operation == ADD_CUSTOMER)
-    {
-        lseek(fd, CUSTOMER_ID_MIN * sizeof(UserModel), SEEK_SET);
-        maxId = CUSTOMER_ID_MIN - 1;
-    }
-
-    // TODO: check for same username
-    while (read(fd, &user, sizeof(user)))
-    {
-        int id = user.user_id;
-        if (userAuthModel.operation == ADD_ADMIN)
+    case SUPERADMIN:
+        if (strcmp(userModel.username, "su") == 0)
         {
-            if (strcmp(user.username, "dummy") != 0 && id <= ADMIN_ID_MAX)
-            {
-                printf("%d\n", id);
-                maxId = id;
-            }
-            else
-            {
-                break;
-            }
-        }
-        else if (userAuthModel.operation == ADD_MANAGER)
-        {
-            if (strcmp(user.username, "dummy") != 0 && id <= MANAGER_ID_MAX)
-            {
-                printf("%d\n", id);
-                maxId = id;
-            }
-            else
-            {
-                break;
-            }
-        }
-        else if (userAuthModel.operation == ADD_EMPLOYEE)
-        {
-            if (strcmp(user.username, "dummy") != 0 && id <= EMPLOYEE_ID_MAX)
-            {
-                printf("%d\n", id);
-                maxId = id;
-            }
-            else
-            {
-                break;
-            }
-        }
-        else if (userAuthModel.operation == ADD_CUSTOMER)
-        {
-            if (strcmp(user.username, "dummy") != 0)
-            {
-                printf("%d\n", id);
-                maxId = id;
-            }
-            else
-            {
-                break;
-            }
-        }
-    }
-
-    if (userAuthModel.operation != ADD_CUSTOMER)
-        lseek(fd, -1 * sizeof(UserModel), SEEK_CUR);
-    userModel.user_id = maxId + 1;
-    userModel.isLoggedIn = false;
-    userModel.accStatus = ENABLED;
-    write(fd, &userModel, sizeof(UserModel));
-    // Unlock the file
-    lockFile(fd, F_UNLCK);
-
-    response.statusCode = 200;
-    char temp[100];
-    sprintf(temp, "\nUser added successfully! Id assigned = %d\n", maxId + 1);
-    strcpy(response.responseMessage, temp);
-
-    close(fd);
-    return response;
-}
-
-// Function to read users from the file with shared lock
-int readUsers(const char *filename)
-{
-    int fd = open(filename, O_RDONLY); // Open file for reading
-    if (fd < 0)
-    {
-        perror("Error opening file");
-        return -1;
-    }
-
-    // Apply shared read lock
-    if (lockFile(fd, F_RDLCK) == -1)
-    {
-        perror("Error locking file");
-        close(fd);
-        return -1;
-    }
-
-    UserModel user;
-    printf("Users in the database:\n");
-    while (read(fd, &user, sizeof(user)))
-    {
-        printUserModel(user);
-    }
-
-    // Unlock the file
-    lockFile(fd, F_UNLCK);
-
-    close(fd);
-    return 0;
-}
-
-// Function to get user-id from the file with shared lock
-ResponseModel getUserId(const char *filename, UserAuthModel userAuthModel)
-{
-    ResponseModel response;
-    UserModel userModel = userAuthModel.user;
-    int fd = open(filename, O_RDONLY); // Open file for reading
-    if (fd < 0)
-    {
-        response.statusCode = 400;
-        strcpy(response.responseMessage, "Error opening file\n");
-        return response;
-    }
-
-    // Apply shared read lock
-    if (lockFile(fd, F_RDLCK) == -1)
-    {
-        close(fd);
-        response.statusCode = 400;
-        strcpy(response.responseMessage, "Error locking file\n");
-        return response;
-    }
-
-    UserModel user;
-    int id = -1;
-    bool isLoggedIn = false;
-    while (read(fd, &user, sizeof(user)))
-    {
-        if (userAuthModel.operation == LOGIN)
-        {
-            if (strcmp(user.username, userModel.username) == 0 && strcmp(user.password, userModel.password) == 0)
-            {
-                // printf("\nfound user\n");
-                id = user.user_id;
-                isLoggedIn = user.isLoggedIn;
-                break;
-            }
+            id = 0;
+            sprintf(str, "%d", id); // Convert int to string
+            responseModel.statusCode = 200;
+            strcpy(responseModel.responseMessage, str);
+            return responseModel;
         }
         else
-        {   
-    printf("------------debug--------------\n");
-    printf("%s | %s\n", user.username, userModel.username);
-            if (strcmp(user.username, userModel.username) == 0)
-            {
-                id = user.user_id;
-                userModel.user_id = user.user_id;
-                userModel.accStatus = user.accStatus;
-                userModel.isLoggedIn = user.isLoggedIn;
-                strcpy(userModel.password, user.password);
-                userModel.role = user.role;
-                strcpy(userModel.username, user.username);
-                break;
-            }
+        {
+
+            responseModel.statusCode = 400;
+            strcpy(responseModel.responseMessage, "Username or password incorrect!");
+            return responseModel;
         }
+    case ADMIN:
+        fd = open(adminDatabase, O_RDWR | O_CREAT, 0666);
+        break;
+    case MANAGER:
+        fd = open(managerDatabase, O_RDWR | O_CREAT, 0666);
+        break;
+    case EMPLOYEE:
+        fd = open(employeeDatabase, O_RDWR | O_CREAT, 0666);
+        break;
+    case CUSTOMER:
+        fd = open(customerDatabase, O_RDWR | O_CREAT, 0666);
+        break;
+    default:
+        break;
     }
-
-    // Unlock the file
-    lockFile(fd, F_UNLCK);
-
-    close(fd);
-    if (id == -1)
-    {
-        response.statusCode = 400;
-        strcpy(response.responseMessage, userAuthModel.operation == LOGIN ? "Either username or password is incorrect. Try again!\n" : "Username is incorrect. Try again!\n");
-    }
-    else if (userAuthModel.operation == LOGIN && isLoggedIn)
-    {
-        response.statusCode = 400;
-        strcpy(response.responseMessage, "Maximum amount of logins reached! Please logout from other devices\n");
-    }
-    else
-    {
-        char str[5]; // Ensure the array is large enough to hold the number
-
-        sprintf(str, "%d", id); // Convert int to string
-        response.statusCode = 200;
-        userAuthModel.operation == LOGIN ? strcpy(response.serverMessage, str) : userModelToString(userModel, response.serverMessage);
-        strcpy(response.responseMessage, "Login successfull!\n");
-    }
-
-    return response;
-}
-
-// Function to update a user by user_id
-ResponseModel updateUser(const char *filename, int user_id, UserModel updatedUser)
-{
-    ResponseModel responseModel;
-    int fd = open(filename, O_RDWR); // Open file for reading and writing
     if (fd < 0)
     {
-        responseModel.statusCode = 400;
         strcpy(responseModel.responseMessage, "Error opening file");
-        return responseModel;
-    }
-
-    // Apply exclusive write lock
-    if (lockFile(fd, F_WRLCK) == -1)
-    {
         responseModel.statusCode = 400;
-        strcpy(responseModel.responseMessage, "Error locking file");
         return responseModel;
     }
 
-    UserModel user;
-    // printf("------here------");
-    if (user_id == 0)
+    while (read(fd, &user, sizeof(UserIdModel)) == sizeof(UserIdModel))
     {
-        lseek(fd, 0, SEEK_SET);
-    }
-    else if (user_id > 0 && user_id <= ADMIN_ID_MAX)
-    {
-        lseek(fd, ADMIN_ID_MIN * sizeof(UserModel), SEEK_SET);
-    }
-    else if (user_id <= MANAGER_ID_MAX)
-    {
-        lseek(fd, MANAGER_ID_MIN * sizeof(UserModel), SEEK_SET);
-    }
-    else if (user_id <= EMPLOYEE_ID_MAX)
-    {
-        lseek(fd, EMPLOYEE_ID_MIN * sizeof(UserModel), SEEK_SET);
-    }
-    else if (user_id >= CUSTOMER_ID_MIN)
-    {
-        lseek(fd, CUSTOMER_ID_MIN * sizeof(UserModel), SEEK_SET);
-    }
-    int count = 0;
-    while (read(fd, &user, sizeof(user)))
-    {
-        if (user.user_id == user_id)
+        if (strcmp(user.username, userModel.username) == 0)
         {
-            // Move the file pointer back to overwrite the user
-            lseek(fd, -1 * sizeof(UserModel), SEEK_CUR);
-            if (write(fd, &updatedUser, sizeof(UserModel)) != sizeof(UserModel))
-            {
-                responseModel.statusCode = 400;
-                strcpy(responseModel.responseMessage, "Error writing to file");
-                return responseModel;
-            }
+            id = user.user_id;
             break;
         }
     }
 
-    // Unlock the file
-    lockFile(fd, F_UNLCK);
+    if (id == -1)
+    {
+        strcpy(responseModel.responseMessage, "User does not exist.\n");
+        responseModel.statusCode = 400;
+    }
+    else
+    {
+        sprintf(str, "%d", id); // Convert int to string
+        responseModel.statusCode = 200;
+        strcpy(responseModel.serverMessage, str);
+    }
+    return responseModel;
+}
 
+int getUserIdInformation(UserRole role)
+{
+    int fd = open(userInformationDatabase, O_RDWR | O_CREAT, 0666), id;
+    UserInformationModel model;
+    lseek(fd, 0, SEEK_SET);
+    read(fd, &model, sizeof(model));
+
+    switch (role)
+    {
+    case ALL:
+        printf("total users:%d\n", model.totalUsers);
+        return model.totalUsers;
+    case ADMIN:
+        return model.adminCount;
+    case MANAGER:
+        return model.managerCount;
+    case EMPLOYEE:
+        return model.employeeCount;
+    case CUSTOMER:
+        return model.customerCount;
+
+    default:
+        break;
+    }
+}
+
+void updateUserInformation(UserRole role)
+{
+    UserInformationModel model;
+    int fd = open(userInformationDatabase, O_RDWR | O_CREAT, 0666), count, total;
+    lseek(fd, 0, SEEK_SET);
+    read(fd, &model, sizeof(model));
+
+    switch (role)
+    {
+    case ADMIN:
+        count = model.adminCount;
+        model.adminCount = count + 1;
+        break;
+    case MANAGER:
+        count = model.managerCount;
+        model.managerCount = count + 1;
+        break;
+    case EMPLOYEE:
+        count = model.employeeCount;
+        model.employeeCount = count + 1;
+        break;
+    case CUSTOMER:
+        count = model.customerCount;
+        model.customerCount = count + 1;
+        break;
+
+    default:
+        break;
+    }
+
+    count = model.totalUsers;
+    model.totalUsers = count + 1;
+    write(fd, &model, sizeof(model));
+
+    close(fd);
+}
+
+void addUserToSpecificDb(void *arg)
+{
+    UserModel *user = (UserModel *)arg;
+}
+
+void *task1(void *arg)
+{
+    UserModel *user = (UserModel *)arg;
+    int fd = open(userDatabase, O_RDWR | O_CREAT, 0666);
+    if (fd < 0)
+    {
+        perror("Error opening file");
+    } // File descriptor
+    if (lock_record(fd, user->user_id, F_WRLCK) == -1)
+    {
+        perror("Error locking file");
+        close(fd);
+    }
+
+    // Append user data to the file
+    lseek(fd, 0, SEEK_END);
+    if (write(fd, user, sizeof(UserModel)) != sizeof(UserModel))
+    {
+        perror("Error writing to file");
+    }
+
+    lock_record(fd, user->user_id, F_UNLCK);
+    close(fd);
+
+    return NULL;
+}
+
+// Second task: Update user information based on role
+void *task2(void *arg)
+{
+    UserModel *user = (UserModel *)arg;
+
+    updateUserInformation(user->role);
+    return NULL;
+}
+
+// Third task: Add user to a specific database
+void *task3(void *arg)
+{
+    UserModel *user = (UserModel *)arg;
+
+    addUserToSpecificDb(&user);
+
+    return NULL;
+}
+
+// int createUser(UserModel user)
+// {
+//     user.user_id = getUserIdInformation(ALL);
+
+//     // pthread_t thread1, thread2, thread3;
+//     // printf("Creating threads!\n");
+//     // // Task 1: Lock, Write, Unlock
+//     // pthread_create(&thread1, NULL, task1, &user);
+
+//     // // Task 2: Update user information
+//     // pthread_create(&thread2, NULL, task2, &user);
+
+//     // // Task 3: Add user to specific DB
+//     // pthread_create(&thread3, NULL, task3, &user);
+
+//     // // Wait for threads to finish
+//     // pthread_join(thread1, NULL);
+//     // pthread_join(thread2, NULL);
+//     // pthread_join(thread3, NULL);
+//     // printf("Combined all threads!\n");
+//     int fd = open(userDatabase, O_RDWR | O_CREAT, 0666);
+//     if (fd < 0)
+//     {
+//         perror("Error opening file");
+//     } // File descriptor
+//     if (lock_record(fd, user.user_id, F_WRLCK) == -1)
+//     {
+//         perror("Error locking file");
+//         close(fd);
+//     }
+
+//     // Append user data to the file
+//     lseek(fd, 0, SEEK_END);
+//     if (write(fd, &user, sizeof(UserModel)) != sizeof(UserModel))
+//     {
+//         perror("Error writing to file");
+//     }
+
+//     lock_record(fd, user.user_id, F_UNLCK);
+//     close(fd);
+
+//     UserInformationModel model;
+
+//     int fd2 = open(userInformationDatabase, O_RDWR | O_CREAT, 0666);
+//     perror("Error opening:");
+//     int count;
+//     lseek(fd2, 0, SEEK_SET);
+//     perror("Error seek:");
+//     read(fd2, &model, sizeof(model));
+//     perror("Error read:");
+//     switch (user.role)
+//     {
+//     case ADMIN:
+//         count = model.adminCount;
+//         model.adminCount = count + 1;
+//         break;
+//     case MANAGER:
+//         count = model.managerCount;
+//         model.managerCount = count + 1;
+//         break;
+//     case EMPLOYEE:
+//         count = model.employeeCount;
+//         model.employeeCount = count + 1;
+//         break;
+//     case CUSTOMER:
+//         count = model.customerCount;
+//         model.customerCount = count + 1;
+//         break;
+
+//     default:
+//         break;
+//     }
+
+//     count = model.totalUsers;
+//     printf("totalusers = %d\n", count);
+//     model.totalUsers = count + 1;
+//     lseek(fd2, 0, SEEK_SET);
+//     write(fd2, &model, sizeof(UserInformationModel));
+
+//     close(fd2);
+//     int fd3;
+//     UserIdModel idModel;
+//     switch (user.role)
+//     {
+//     case ADMIN:
+//         fd3 = open(adminDatabase, O_RDWR | O_CREAT, 0666);
+//         break;
+//     case MANAGER:
+//         fd3 = open(managerDatabase, O_RDWR | O_CREAT, 0666);
+//         break;
+//     case EMPLOYEE:
+//         fd3 = open(employeeDatabase, O_RDWR | O_CREAT, 0666);
+//         break;
+//     case CUSTOMER:
+//         fd3 = open(customerDatabase, O_RDWR | O_CREAT, 0666);
+//         break;
+//     default:
+//         break;
+//     }
+
+//     if (fd3< 0)
+//     {
+//         perror("Error opening file");
+//     }
+//     lseek(fd3, 0, SEEK_END);
+//     idModel.user_id = user.user_id;
+//     strcpy(idModel.username, user.username);
+//     if (write(fd3, &idModel, sizeof(idModel)) != sizeof(idModel))
+//     {
+//         perror("Error writing to file");
+//     }
+
+//     close(fd3);
+//     return 0;
+// }
+
+int createUser(UserModel user)
+{
+    user.user_id = getUserIdInformation(ALL);
+
+    // Open user database file
+    int fd = open(userDatabase, O_RDWR | O_CREAT, 0666);
+    if (fd < 0)
+    {
+        perror("Error opening user database");
+        return -1;
+    }
+
+    // Lock the record for writing
+    if (lock_record(fd, user.user_id, F_WRLCK) == -1)
+    {
+        perror("Error locking user database");
+        close(fd);
+        return -1;
+    }
+
+    // Append user data to the end of the file
+    if (lseek(fd, 0, SEEK_END) == -1)
+    {
+        perror("Error seeking to end of user database");
+        close(fd);
+        return -1;
+    }
+
+    if (write(fd, &user, sizeof(UserModel)) != sizeof(UserModel))
+    {
+        perror("Error writing to user database");
+        close(fd);
+        return -1;
+    }
+
+    // Unlock and close user database file
+    lock_record(fd, user.user_id, F_UNLCK);
+    close(fd);
+
+    // Update the user information model
+    UserInformationModel model;
+    int fd2 = open(userInformationDatabase, O_RDWR);
+    if (fd2 < 0)
+    {
+        perror("Error opening user information database");
+        return -1;
+    }
+
+    if (lseek(fd2, 0, SEEK_SET) == -1)
+    {
+        perror("Error seeking in user information database");
+        close(fd2);
+        return -1;
+    }
+
+    if (read(fd2, &model, sizeof(UserInformationModel)) != sizeof(UserInformationModel))
+    {
+        perror("Error reading from user information database");
+        close(fd2);
+        return -1;
+    }
+
+    // Update the role-specific count and total user count
+    switch (user.role)
+    {
+    case ADMIN:
+        model.adminCount++;
+        break;
+    case MANAGER:
+        model.managerCount++;
+        break;
+    case EMPLOYEE:
+        model.employeeCount++;
+        break;
+    case CUSTOMER:
+        model.customerCount++;
+        break;
+    default:
+        break;
+    }
+
+    model.totalUsers++;
+
+    // Write updated model back to the file
+    if (lseek(fd2, 0, SEEK_SET) == -1)
+    {
+        perror("Error seeking to start of user information database");
+        close(fd2);
+        return -1;
+    }
+
+    if (write(fd2, &model, sizeof(UserInformationModel)) != sizeof(UserInformationModel))
+    {
+        perror("Error writing to user information database");
+        close(fd2);
+        return -1;
+    }
+
+    close(fd2);
+
+    // Add user to the specific role-based database
+    int fd3;
+    UserIdModel idModel;
+    switch (user.role)
+    {
+    case ADMIN:
+        fd3 = open(adminDatabase, O_RDWR | O_CREAT, 0666);
+        break;
+    case MANAGER:
+        fd3 = open(managerDatabase, O_RDWR | O_CREAT, 0666);
+        break;
+    case EMPLOYEE:
+        fd3 = open(employeeDatabase, O_RDWR | O_CREAT, 0666);
+        break;
+    case CUSTOMER:
+        fd3 = open(customerDatabase, O_RDWR | O_CREAT, 0666);
+        break;
+    default:
+        fd3 = -1;
+        break;
+    }
+
+    if (fd3 < 0)
+    {
+        perror("Error opening role-specific database");
+        return -1;
+    }
+
+    // Append user ID and username to the role-specific database
+    if (lseek(fd3, 0, SEEK_END) == -1)
+    {
+        perror("Error seeking to end of role-specific database");
+        close(fd3);
+        return -1;
+    }
+
+    idModel.user_id = user.user_id;
+    strcpy(idModel.username, user.username);
+
+    if (write(fd3, &idModel, sizeof(UserIdModel)) != sizeof(UserIdModel))
+    {
+        perror("Error writing to role-specific database");
+        close(fd3);
+        return -1;
+    }
+
+    close(fd3);
+    return 0;
+}
+
+ResponseModel login(int userId, UserModel userModel)
+{
+    ResponseModel responseModel;
+    UserModel user;
+    int fd = open(userDatabase, O_RDWR);
+    if (fd < 0)
+    {
+        strcpy(responseModel.responseMessage, "Error opening file");
+        responseModel.statusCode = 400;
+        close(fd);
+        return responseModel;
+    }
+    if (lock_record(fd, userId, F_WRLCK) == -1)
+    {
+        strcpy(responseModel.responseMessage, "Error locking file");
+        responseModel.statusCode = 400;
+        close(fd);
+        return responseModel;
+    }
+
+    // Append user data to the file
+    lseek(fd, userId, SEEK_SET);
+    if (read(fd, &user, sizeof(UserModel)) != sizeof(UserModel))
+    {
+        strcpy(responseModel.responseMessage, "Error reading file");
+        responseModel.statusCode = 400;
+        close(fd);
+        return responseModel;
+    }
+
+    lock_record(fd, userId, F_UNLCK);
+    close(fd);
+
+    if (user.accStatus == DISABLED)
+    {
+
+        responseModel.statusCode = 400;
+        strcpy(responseModel.responseMessage, "Account has been disabled!");
+    }
+    else if (user.isLoggedIn == true)
+    {
+
+        responseModel.statusCode = 400;
+        strcpy(responseModel.responseMessage, "Maximum amount of logins has been reached!");
+    }
+    else if (strcmp(user.password, userModel.password) == 0)
+    {
+        responseModel.statusCode = 200;
+        strcpy(responseModel.responseMessage, "Login successful!");
+    }
+
+    return responseModel;
+}
+
+ResponseModel updateUser(int userId, UserModel userModel)
+{
+    ResponseModel responseModel;
+    int fd = open(userDatabase, O_RDWR);
+    if (fd < 0)
+    {
+        strcpy(responseModel.responseMessage, "Error opening file");
+        responseModel.statusCode = 400;
+        close(fd);
+        return responseModel;
+    }
+    if (lock_record(fd, userId, F_WRLCK) == -1)
+    {
+        strcpy(responseModel.responseMessage, "Error locking file");
+        responseModel.statusCode = 400;
+        close(fd);
+        return responseModel;
+    }
+
+    // Append user data to the file
+    lseek(fd, userId, SEEK_SET);
+    if (write(fd, &userModel, sizeof(UserModel)) != sizeof(UserModel))
+    {
+        strcpy(responseModel.responseMessage, "Error writing to file");
+        responseModel.statusCode = 400;
+        close(fd);
+        return responseModel;
+    }
+
+    lock_record(fd, userId, F_UNLCK);
     close(fd);
     responseModel.statusCode = 200;
     strcpy(responseModel.responseMessage, "Upadated user!");
     return responseModel;
 }
 
-// Function to delete a user by user_id
-int deleteUser(const char *filename, int user_id)
+ResponseModel logout(int userId, UserModel userModel)
 {
-    int fd = open(filename, O_RDWR); // Open file for reading and writing
-    if (fd < 0)
-    {
-        perror("Error opening file");
-        return -1;
-    }
+    ResponseModel responseModel;
+    userModel.isLoggedIn = false;
+    responseModel = updateUser(userId, userModel);
+    responseModel.statusCode = 200;
+    strcpy(responseModel.responseMessage, "Logout successful!");
+    return responseModel;
+}
 
-    // Apply exclusive write lock
-    if (lockFile(fd, F_WRLCK) == -1)
-    {
-        perror("Error locking file");
-        close(fd);
-        return -1;
-    }
-
-    FILE *tmpFile = fopen("temp.bin", "wb"); // Temporary file to store updated users
-    if (!tmpFile)
-    {
-        perror("Error creating temp file");
-        close(fd);
-        return -1;
-    }
-
+void readAllUsers()
+{
     UserModel user;
-    while (read(fd, &user, sizeof(user)))
+    int fd = open(userDatabase, O_RDONLY, 0600);
+    // Move to the beginning of the file
+    lseek(fd, 0, SEEK_SET);
+
+    printf("Listing all users:\n");
+    printf("\n%-10s %-20s %-15s %-10s %-10s\n", "ID", "Username", "Role", "LoggedIn", "Status");
+    printf("-------------------------------------------------------------------\n");
+    // Read the file record by record
+    while (read(fd, &user, sizeof(UserModel)) == sizeof(UserModel))
     {
-        if (user.user_id != user_id)
-        {
-            fwrite(&user, sizeof(UserModel), 1, tmpFile); // Copy all except the one to delete
+        if (user.user_id != -1)
+        { // Only display records that are not marked as deleted
+
+            printf("%-10d %-20s %-15s %-10s %-10s\n",
+                   user.user_id,
+                   user.username,
+                   getRoleName(user.role),
+                   user.isLoggedIn ? "true" : "false",
+                   getAccountStatus(user.accStatus));
         }
     }
+}
 
-    // Close both files
-    fclose(tmpFile);
-    close(fd);
 
-    // Replace the original file with the temp file
-    remove(filename);             // Delete the original file
-    rename("temp.bin", filename); // Rename temp file as the original
+void readAllAdmin()
+{
+    UserIdModel user;
+    int fd = open(adminDatabase, O_RDONLY, 0600);
+    // Move to the beginning of the file
+    lseek(fd, 0, SEEK_SET);
 
-    return 0;
+    printf("Listing all admins:\n");
+    printf("\n%-10s %-20s\n", "ID", "Username");
+    printf("-------------------------------------------------------------------\n");
+    // Read the file record by record
+    while (read(fd, &user, sizeof(UserIdModel)) == sizeof(UserIdModel))
+    {
+        if (user.user_id != -1)
+        { // Only display records that are not marked as deleted
+
+            printf("%-10d %-20s\n",
+                   user.user_id,
+                   user.username);
+        }
+    }
+}
+
+void readAllManagers()
+{
+    UserIdModel user;
+    int fd = open(managerDatabase, O_RDONLY, 0600);
+    // Move to the beginning of the file
+    lseek(fd, 0, SEEK_SET);
+
+    printf("Listing all managers:\n");
+    printf("\n%-10s %-20s\n", "ID", "Username");
+    printf("-------------------------------------------------------------------\n");
+    // Read the file record by record
+    while (read(fd, &user, sizeof(UserIdModel)) == sizeof(UserIdModel))
+    {
+        if (user.user_id != -1)
+        { // Only display records that are not marked as deleted
+
+            printf("%-10d %-20s\n",
+                   user.user_id,
+                   user.username);
+        }
+    }
+}
+
+void readAllEmployees()
+{
+    UserIdModel user;
+    int fd = open(employeeDatabase, O_RDONLY, 0600);
+    // Move to the beginning of the file
+    lseek(fd, 0, SEEK_SET);
+
+    printf("Listing all emplyees:\n");
+    printf("\n%-10s %-20s\n", "ID", "Username");
+    printf("-------------------------------------------------------------------\n");
+    // Read the file record by record
+    while (read(fd, &user, sizeof(UserIdModel)) == sizeof(UserIdModel))
+    {
+        if (user.user_id != -1)
+        { // Only display records that are not marked as deleted
+
+            printf("%-10d %-20s\n",
+                   user.user_id,
+                   user.username);
+        }
+    }
+}
+
+void readAllCustomers()
+{
+    UserIdModel user;
+    int fd = open(customerDatabase, O_RDONLY, 0600);
+    // Move to the beginning of the file
+    lseek(fd, 0, SEEK_SET);
+
+    printf("Listing all customers:\n");
+    printf("\n%-10s %-20s\n", "ID", "Username");
+    printf("-------------------------------------------------------------------\n");
+    // Read the file record by record
+    while (read(fd, &user, sizeof(UserIdModel)) == sizeof(UserIdModel))
+    {
+        if (user.user_id != -1)
+        { // Only display records that are not marked as deleted
+
+            printf("%-10d %-20s\n",
+                   user.user_id,
+                   user.username);
+        }
+    }
 }
 
 #endif

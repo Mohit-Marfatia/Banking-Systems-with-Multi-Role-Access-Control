@@ -9,7 +9,6 @@ typedef enum
     MODIFY_MANAGER,
     MODIFY_EMPLOYEE,
     MODIFY_CUSTOMER,
-    ERROR,
     LOGOUT,
     EXIT
 } UserAuthOperations;
