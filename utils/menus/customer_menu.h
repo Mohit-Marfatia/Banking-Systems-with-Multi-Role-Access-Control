@@ -7,8 +7,9 @@ CustomerResponseModel printCustomerMenu(){
     printf("2. Deposit Money\n");
     printf("3. Withdraw Money\n");
     printf("4. Transact Money\n");
-    printf("5. Apply for a Loan\n");
-    printf("6. Add a Feedback\n");
+    printf("5. View Transaction History\n");
+    printf("6. Apply for a Loan\n");
+    printf("7. Add a Feedback\n");
     printf("8. Logout\n");
     printf("9. Exit\n");
 
@@ -40,7 +41,9 @@ CustomerResponseModel printCustomerMenu(){
         scanf("%s", str2);
         snprintf(combined, sizeof(combined), "%s %s", str, str2);
         strcpy(customerResponseModel.customerResponse, combined);
-    } else if(choice == 8){
+    } else if(choice == 5){
+        customerResponseModel.operation = VIEW_TRANSACTION_HISTORY;}
+    else if(choice == 8){
         customerResponseModel.operation = LOGOUT;
     } else if(choice == 9){
         customerResponseModel.operation = EXIT;

@@ -227,4 +227,140 @@ void readAllTransaction() {
     close(fd);
 }
 
+int compareTransactionIds(const void *a, const void *b)
+{
+    TransactionModel *t1 = (TransactionModel *)a;
+    TransactionModel *t2 = (TransactionModel *)b;
+
+    // Reverse order: higher transaction_id comes first
+    return t2->transaction_id - t1->transaction_id;
+}
+
+char *readTransactionsOfUserId(int userId)
+{
+    TransactionModel transaction;
+    int fd = open(transactionDatabase, O_RDONLY, 0600);
+
+    if (fd == -1)
+    {
+        perror("Error opening transaction database");
+        return NULL;
+    }
+
+    // Lock the transaction database for reading
+    if (lockRecordTransactionDb(fd, F_RDLCK) == -1)
+    {
+        perror("Error locking transaction database");
+        close(fd);
+        return NULL;
+    }
+
+    // Move to the beginning of the file
+    lseek(fd, 0, SEEK_SET);
+
+    size_t initial_size = 512; // Initial size of the buffer
+    size_t current_size = initial_size;
+    size_t content_length = 0;
+
+    // Dynamically allocate memory for the string
+    char *str = (char *)malloc(initial_size * sizeof(char));
+    if (str == NULL)
+    {
+        perror("Failed to allocate memory");
+        lockRecordTransactionDb(fd, F_UNLCK); // Unlock before returning
+        close(fd);
+        return NULL;
+    }
+
+    // Initialize the buffer
+    str[0] = '\0'; // Set the string to be empty initially
+
+    // Append header to the buffer
+    content_length += snprintf(str + content_length, current_size - content_length,
+                               "\n%-15s %-15s %-15s %-15s %-20s %-10s\n", 
+                               "TransactionID", "AccountID", "FromUserID", "ToUserID", 
+                               "TransactionType", "Amount");
+
+    // Append the separator
+    content_length += snprintf(str + content_length, current_size - content_length,
+                               "--------------------------------------------------------------------------\n");
+
+    // Prepare to store transactions in an array for sorting
+    size_t transaction_count = 0;
+    size_t transaction_capacity = 10; // Initial capacity
+    TransactionModel *transactions = (TransactionModel *)malloc(transaction_capacity * sizeof(TransactionModel));
+    if (transactions == NULL)
+    {
+        perror("Failed to allocate memory for transactions");
+        free(str);
+        lockRecordTransactionDb(fd, F_UNLCK);// Unlock before returning
+        close(fd);
+        return NULL;
+    }
+
+    // Loop through the transactions and collect matching records
+    while (read(fd, &transaction, sizeof(TransactionModel)) == sizeof(TransactionModel))
+    {
+        if (transaction.fromUserId == userId || transaction.toUserId == userId)
+        {
+            // Ensure there is enough space to store the new transaction
+            if (transaction_count >= transaction_capacity)
+            {
+                transaction_capacity *= 2;
+                transactions = (TransactionModel *)realloc(transactions, transaction_capacity * sizeof(TransactionModel));
+                if (transactions == NULL)
+                {
+                    perror("Failed to reallocate memory for transactions");
+                    free(str);
+        lockRecordTransactionDb(fd, F_UNLCK);// Unlock before returning
+                    close(fd);
+                    return NULL;
+                }
+            }
+            transactions[transaction_count++] = transaction;
+        }
+    }
+
+    // Unlock the transaction database
+        lockRecordTransactionDb(fd, F_UNLCK);
+    close(fd);
+
+    // Sort the transactions by transaction ID in reverse order
+    qsort(transactions, transaction_count, sizeof(TransactionModel), compareTransactionIds);
+
+    // Append sorted transactions to the buffer
+    for (size_t i = 0; i < transaction_count; i++)
+    {
+        TransactionModel t = transactions[i];
+
+        // Ensure there is enough space in the string buffer to append the new transaction data
+        if (content_length + 100 >= current_size)
+        {
+            current_size *= 2; // Double the buffer size
+            str = (char *)realloc(str, current_size * sizeof(char));
+            if (str == NULL)
+            {
+                perror("Failed to reallocate memory");
+                free(transactions);
+                return NULL;
+            }
+        }
+
+        // Append transaction details to the buffer
+        content_length += snprintf(str + content_length, current_size - content_length,
+                                   "%-15d %-15d %-15d %-15d %-20s %-10d\n",
+                                   t.transaction_id,
+                                   t.account_id,
+                                   t.fromUserId,
+                                   t.toUserId,
+                                   getTransactionType(t.transactionType),  // Convert enum to string
+                                   t.amount);
+    }
+
+    // Free the transactions array
+    free(transactions);
+
+    return str;
+}
+
 #endif

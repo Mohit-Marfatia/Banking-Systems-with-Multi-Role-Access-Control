@@ -142,9 +142,8 @@ int main()
                 flag = false;
                 continue;
             }
-            else if (customerResponseModel.operation == VIEW_BALANCE)
+            else if (customerResponseModel.operation == VIEW_BALANCE || customerResponseModel.operation == VIEW_TRANSACTION_HISTORY)
             {
-
                 int strSize;
                 read(sd, &strSize, sizeof(strSize));
                 char str[strSize];

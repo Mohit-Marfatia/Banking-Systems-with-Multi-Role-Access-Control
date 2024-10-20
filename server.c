@@ -219,7 +219,12 @@ int main()
                                         int toCustomer = getCustomerId(str);
                                         int amount = atoi(str2);
                                         transactMoney(userModel.user_id, toCustomer, amount, SAVINGS, TRANSFER);
-                                    }
+                                    } else if(customerResponseModel.operation == VIEW_TRANSACTION_HISTORY){
+                                        char *str = readTransactionsOfUserId(userModel.user_id);
+                                        int strSize = strlen(str)+1;
+                                        write(clientSD, &strSize, sizeof(strSize));
+                                        write(clientSD, str, strlen(str) +1);
+                                    } 
 
                                 }
                             }

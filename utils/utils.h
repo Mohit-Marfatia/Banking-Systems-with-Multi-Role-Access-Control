@@ -47,6 +47,17 @@ int lockRecordAccountDb(int fd, int lock_type)
     return result;
 }
 
+int lockRecordTransactionDb(int fd, int lock_type)
+{
+    struct flock fl;
+    fl.l_type = lock_type;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = 0;
+    fl.l_len = 0;
+
+    return fcntl(fd, F_SETLKW, &fl);
+}
+
 void hidePasswordInput(char *password, int size)
 {
     struct termios oldt, newt;
