@@ -11,6 +11,10 @@ const char *displayAdminMenu = "displayAdminMenu";
 
 const char *displayCustomerMenu = "displayCustomerMenu";
 
+const char *displayManagerMenu = "displayManagerMenu";
+
+const char *displayEmployeeMenu = "displayEmployeeMenu";
+
 const char *userDatabase = "db/user/user_database.bin";
 
 const char *dbInformationDatabase = "db/db_information_database.bin";

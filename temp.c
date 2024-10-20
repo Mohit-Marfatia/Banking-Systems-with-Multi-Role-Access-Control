@@ -53,6 +53,33 @@ int main() {
 
     createUser(user);
 
+    user.user_id = -1;
+    user.accStatus = ACTIVATED;
+    user.role = ADMIN;
+    strcpy(user.username, "admin1");
+    strcpy(user.password, "admin1");
+    user.isLoggedIn = false;
+
+    createUser(user);
+
+    user.user_id = -1;
+    user.accStatus = ACTIVATED;
+    user.role = MANAGER;
+    strcpy(user.username, "man1");
+    strcpy(user.password, "man1");
+    user.isLoggedIn = false;
+
+    createUser(user);
+
+    user.user_id = -1;
+    user.accStatus = ACTIVATED;
+    user.role = EMPLOYEE;
+    strcpy(user.username, "emp1");
+    strcpy(user.password, "emp1");
+    user.isLoggedIn = false;
+
+    createUser(user);
+
     readAllUsers();
     // readAllAdmin();
     // readAllManagers();

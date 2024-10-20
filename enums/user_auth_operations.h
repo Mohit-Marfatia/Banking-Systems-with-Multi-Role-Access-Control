@@ -19,6 +19,8 @@ typedef enum
     VIEW_TRANSACTION_HISTORY,
     APPLY_LOAN,
     ADD_FEEDBACK,
+    ASSIGN_LOAN_TO_EMPLOYEE,
+    APPROVE_REJECT_LOAN,
     ERROR,
     LOGOUT,
     EXIT
@@ -56,6 +58,10 @@ const char *getOperationName(UserOperations opr)
         return "TRANSACT_MONEY";
     case APPLY_LOAN:
         return "APPLY_LOAN";
+    case ASSIGN_LOAN_TO_EMPLOYEE:
+        return "ASSIGN_LOAN_TO_EMPLOYEE";
+    case APPROVE_REJECT_LOAN:
+        return "APPROVE_REJECT_LOAN";
     case ADD_FEEDBACK:
         return "ADD_FEEDBACK";
     case LOGOUT:

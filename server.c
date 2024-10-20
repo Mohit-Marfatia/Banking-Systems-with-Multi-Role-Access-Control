@@ -152,16 +152,16 @@ int main()
                                         switch (userAuthModel.operation)
                                         {
                                         case MODIFY_ADMIN:
-                                            write(clientSD, printAdminUsers, strlen(printAdminUsers)+1);
+                                            write(clientSD, printAdminUsers, strlen(printAdminUsers) + 1);
                                             break;
                                         case MODIFY_MANAGER:
-                                            write(clientSD, printManagerUsers, strlen(printManagerUsers)+1);
+                                            write(clientSD, printManagerUsers, strlen(printManagerUsers) + 1);
                                             break;
                                         case MODIFY_EMPLOYEE:
-                                            write(clientSD, printEmployeeUsers, strlen(printEmployeeUsers)+1);
+                                            write(clientSD, printEmployeeUsers, strlen(printEmployeeUsers) + 1);
                                             break;
                                         case MODIFY_CUSTOMER:
-                                            write(clientSD, printCustomerUsers, strlen(printCustomerUsers)+1);
+                                            write(clientSD, printCustomerUsers, strlen(printCustomerUsers) + 1);
                                             break;
 
                                         default:
@@ -172,13 +172,13 @@ int main()
                                         read(clientSD, &modifiedModel, sizeof(UserModel));
                                         ResponseModel updateResponse = updateUser(modifiedModel.user_id, modifiedModel);
                                         write(clientSD, &updateResponse, sizeof(ResponseModel));
-
                                     }
                                 }
-                                else if(userModel.role == CUSTOMER){
+                                else if (userModel.role == CUSTOMER)
+                                {
                                     write(clientSD, displayCustomerMenu, strlen(displayCustomerMenu) + 1);
                                     CustomerResponseModel customerResponseModel;
-                                    read(clientSD, &customerResponseModel, sizeof(customerResponseModel));  
+                                    read(clientSD, &customerResponseModel, sizeof(customerResponseModel));
                                     printf("\nOpr: %s\n", getOperationName(customerResponseModel.operation));
                                     if (customerResponseModel.operation == ERROR)
                                     {
@@ -199,43 +199,154 @@ int main()
                                         printf("Client Exited successfully.\n");
                                         close(clientSD);
                                         continue;
-                                    } else if(customerResponseModel.operation == VIEW_BALANCE){
+                                    }
+                                    else if (customerResponseModel.operation == VIEW_BALANCE)
+                                    {
                                         char *str = readAccountsOfUserId(userModel.user_id);
-                                        int strSize = strlen(str)+1;
+                                        int strSize = strlen(str) + 1;
                                         write(clientSD, &strSize, sizeof(strSize));
-                                        write(clientSD, str, strlen(str) +1);
-                                    } else if(customerResponseModel.operation == DEPOSIT_MONEY){
+                                        write(clientSD, str, strlen(str) + 1);
+                                    }
+                                    else if (customerResponseModel.operation == DEPOSIT_MONEY)
+                                    {
                                         char str[10];
                                         strcpy(str, customerResponseModel.customerResponse);
                                         int amount = atoi(str);
                                         transactMoney(userModel.user_id, userModel.user_id, amount, SAVINGS, DEPOSIT);
-                                    } else if(customerResponseModel.operation == WITHDRAW_MONEY){
+                                    }
+                                    else if (customerResponseModel.operation == WITHDRAW_MONEY)
+                                    {
                                         char str[10];
                                         strcpy(str, customerResponseModel.customerResponse);
                                         int amount = atoi(str);
                                         transactMoney(userModel.user_id, userModel.user_id, amount, SAVINGS, WITHDRAWAL);
-                                    } else if(customerResponseModel.operation == TRANSACT_MONEY){
+                                    }
+                                    else if (customerResponseModel.operation == TRANSACT_MONEY)
+                                    {
                                         char str[100], str2[10];
                                         sscanf(customerResponseModel.customerResponse, "%s %s", str, str2);
                                         int toCustomer = getCustomerId(str);
                                         int amount = atoi(str2);
                                         transactMoney(userModel.user_id, toCustomer, amount, SAVINGS, TRANSFER);
-                                    } else if(customerResponseModel.operation == VIEW_TRANSACTION_HISTORY){
+                                    }
+                                    else if (customerResponseModel.operation == VIEW_TRANSACTION_HISTORY)
+                                    {
                                         char *str = readTransactionsOfUserId(userModel.user_id);
-                                        int strSize = strlen(str)+1;
+                                        int strSize = strlen(str) + 1;
                                         write(clientSD, &strSize, sizeof(strSize));
-                                        write(clientSD, str, strlen(str) +1);
-                                    } else if(customerResponseModel.operation == APPLY_LOAN){
+                                        write(clientSD, str, strlen(str) + 1);
+                                    }
+                                    else if (customerResponseModel.operation == APPLY_LOAN)
+                                    {
                                         char str[100];
                                         strcpy(str, customerResponseModel.customerResponse);
                                         int amount = atoi(str);
                                         int apply = applyForLoan(userModel.user_id, amount);
-                                        if(apply == 0) strcpy(str, "Loan Applied successfully!\n"); 
-                                        else strcpy(str, "Something went wrong! Try again later\n");
-                                        write(clientSD, str, strlen(str) +1);
+                                        // if (apply == 0)
+                                        //     strcpy(str, "Loan Applied successfully!\n");
+                                        // else
+                                        //     strcpy(str, "Something went wrong! Try again later\n");
+                                        // write(clientSD, str, strlen(str) + 1);
+                                        // continue;
+                                    }
+                                }
+                                else if (userModel.role == MANAGER)
+                                {
+                                    write(clientSD, displayManagerMenu, strlen(displayManagerMenu) + 1);
+                                    CustomerResponseModel customerResponseModel;
+                                    read(clientSD, &customerResponseModel, sizeof(customerResponseModel));
+                                    printf("\nOpr: %s\n", getOperationName(customerResponseModel.operation));
+                                    if (customerResponseModel.operation == ERROR)
+                                    {
                                         continue;
-                                    } 
+                                    }
+                                    else if (customerResponseModel.operation == LOGOUT)
+                                    {
+                                        logout(userModel.user_id, userModel);
+                                        printf("\n Logout Successful!\n");
+                                        userLoggedIn = false;
+                                        continue;
+                                    }
+                                    else if (customerResponseModel.operation == EXIT)
+                                    {
+                                        logout(userModel.user_id, userModel);
+                                        userLoggedIn = false;
+                                        flag = false;
+                                        printf("Client Exited successfully.\n");
+                                        close(clientSD);
+                                        continue;
+                                    }
+                                    else if (customerResponseModel.operation = ASSIGN_LOAN_TO_EMPLOYEE)
+                                    {
+                                        char *str = printAllLoans();
+                                        int strSize = strlen(str) + 1;
+                                        write(clientSD, &strSize, sizeof(strSize));
+                                        write(clientSD, str, strlen(str) + 1);
+                                        int loanId;
+                                        read(clientSD, &loanId, sizeof(loanId));
 
+                                        str = printAllEmployees();
+                                        strSize = strlen(str) + 1;
+                                        write(clientSD, &strSize, sizeof(strSize));
+                                        write(clientSD, str, strlen(str) + 1);
+                                        int empId;
+                                        read(clientSD, &empId, sizeof(empId));
+
+                                        int assign = assignLoanToEmployee(loanId, empId);
+                                        // if (assign == 0)
+
+                                        //     strcpy(str, "Loan Assigned successfully!\n");
+                                        // else
+                                        //     strcpy(str, "Something went wrong! Try again later\n");
+                                        // write(clientSD, str, strlen(str) + 1);
+                                        // continue;
+                                        // continue;
+                                    }
+                                }
+                                else if (userModel.role == EMPLOYEE)
+                                {
+                                    write(clientSD, displayEmployeeMenu, strlen(displayEmployeeMenu) + 1);
+                                    CustomerResponseModel customerResponseModel;
+                                    read(clientSD, &customerResponseModel, sizeof(customerResponseModel));
+                                    printf("\nOpr: %s\n", getOperationName(customerResponseModel.operation));
+                                    if (customerResponseModel.operation == ERROR)
+                                    {
+                                        continue;
+                                    }
+                                    else if (customerResponseModel.operation == LOGOUT)
+                                    {
+                                        logout(userModel.user_id, userModel);
+                                        printf("\n Logout Successful!\n");
+                                        userLoggedIn = false;
+                                        continue;
+                                    }
+                                    else if (customerResponseModel.operation == EXIT)
+                                    {
+                                        logout(userModel.user_id, userModel);
+                                        userLoggedIn = false;
+                                        flag = false;
+                                        printf("Client Exited successfully.\n");
+                                        close(clientSD);
+                                        continue;
+                                    }
+                                    else if (customerResponseModel.operation == APPROVE_REJECT_LOAN)
+                                    {
+                                        char *str = printAllLoansForEmployee(userModel.user_id);
+                                        int strSize = strlen(str) + 1;
+                                        write(clientSD, &strSize, sizeof(strSize));
+                                        write(clientSD, str, strlen(str) + 1);
+                                        int loanId;
+                                        read(clientSD, &loanId, sizeof(loanId));
+                                        LoanStatus approve;
+                                        read(clientSD, &approve, sizeof(approve));
+                                        int approveResponse = approveOrRejectLoan(loanId, approve);
+                                        if (approve == APPROVED)
+                                        {
+                                            int loan_amount = addLoanAccount(loanId);
+                                            int user_id = getUserIdFromLoanId(loanId);
+                                            transactMoney(user_id, user_id, loan_amount, SAVINGS, DEPOSIT);
+                                        }
+                                    }
                                 }
                             }
                         }

@@ -12,6 +12,8 @@
 #include "utils/menus/user_login_menu.h"
 #include "utils/menus/admin_menu.h"
 #include "utils/menus/customer_menu.h"
+#include "utils/menus/manager_menu.h"
+#include "utils/menus/employee_menu.h"
 #include "models/user_auth_model.h"
 #include "models/response_model.h"
 #include "models/customer_response_model.h"
@@ -149,11 +151,80 @@ int main()
                 char str[strSize];
                 read(sd, str, sizeof(str));
                 printf("%s", str);
-            } else if(customerResponseModel.operation == APPLY_LOAN){
-                char str[100];
+            }
+            // else if (customerResponseModel.operation == APPLY_LOAN)
+            // {
+            //     char str[100];
+            //     read(sd, str, sizeof(str));
+            //     printf("%s", str);
+            //     continue;
+            // }
+        }
+        else if (strcmp(buffer, displayManagerMenu) == 0)
+        {
+            CustomerResponseModel customerResponseModel = printManagerMenu();
+            write(sd, &customerResponseModel, sizeof(customerResponseModel));
+            if (customerResponseModel.operation == ERROR)
+            {
+                continue;
+            }
+            else if (customerResponseModel.operation == LOGOUT)
+            {
+                continue;
+            }
+            else if (customerResponseModel.operation == EXIT)
+            {
+                flag = false;
+                continue;
+            } 
+            else if(customerResponseModel.operation == ASSIGN_LOAN_TO_EMPLOYEE){
+                int strSize;
+                read(sd, &strSize, sizeof(strSize));
+                char str[strSize];
                 read(sd, str, sizeof(str));
                 printf("%s", str);
+                int loanId = getLoanIdForLoanAssignment();
+                write(sd, &loanId, sizeof(loanId));
+                
+                read(sd, &strSize, sizeof(strSize));
+                char str2[strSize];
+                read(sd, str2, sizeof(str));
+                printf("%s", str2);
+                int empId = getEmployeeIdForLoanAssignment();
+                write(sd, &empId, sizeof(empId));
+                // char str3[100];
+                // read(sd, str3, sizeof(str3));
+                // printf("%s", str3);
+                // continue;continue;
+            }
+        }
+        else if (strcmp(buffer, displayEmployeeMenu) == 0)
+        {
+            CustomerResponseModel customerResponseModel = printEmployeeMenu();
+            write(sd, &customerResponseModel, sizeof(customerResponseModel));
+            if (customerResponseModel.operation == ERROR)
+            {
                 continue;
+            }
+            else if (customerResponseModel.operation == LOGOUT)
+            {
+                continue;
+            }
+            else if (customerResponseModel.operation == EXIT)
+            {
+                flag = false;
+                continue;
+            } 
+            else if(customerResponseModel.operation == APPROVE_REJECT_LOAN){
+                int strSize;
+                read(sd, &strSize, sizeof(strSize));
+                char str[strSize];
+                read(sd, str, sizeof(str));
+                printf("%s", str);
+                int loanId = getLoanIdForApproval();
+                write(sd, &loanId, sizeof(loanId));
+                LoanStatus approve = loanApproval();
+                write(sd, &approve, sizeof(approve));
             }
         }
     }

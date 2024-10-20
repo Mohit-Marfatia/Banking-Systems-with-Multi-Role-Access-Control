@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include "../../models/customer_response_model.h"
+#include "../../enums/loan_status.h"
 
-CustomerResponseModel printManagerMenu()
+CustomerResponseModel printEmployeeMenu()
 {
     printf("\n---Customer Menu Controls---\n");
-    printf("1. Assign Loan to employee\n");
+    printf("1. Approve/Reject Loan\n");
     printf("8. Logout\n");
     printf("9. Exit\n");
 
@@ -14,7 +15,7 @@ CustomerResponseModel printManagerMenu()
     CustomerResponseModel customerResponseModel;
     if (choice == 1)
     {
-        customerResponseModel.operation = ASSIGN_LOAN_TO_EMPLOYEE;
+        customerResponseModel.operation = APPROVE_REJECT_LOAN;
     }
     else if (choice == 8)
     {
@@ -32,16 +33,16 @@ CustomerResponseModel printManagerMenu()
     return customerResponseModel;
 }
 
-int getEmployeeIdForLoanAssignment(){
-    printf("Choose one of the employees to assign the loan: ");
+int getLoanIdForApproval(){
+    printf("Choose one of the pending loans: ");
     int choice;
     scanf("%d", &choice);
     return choice;
 }
 
-int getLoanIdForLoanAssignment(){
-    printf("Choose one of the pending loans: ");
+LoanStatus loanApproval(){
+    printf("Press 1 to APPROVE and 2 to REJECT:");
     int choice;
     scanf("%d", &choice);
-    return choice;
+    return choice == 1? APPROVED : REJECTED;
 }
