@@ -196,6 +196,13 @@ int main()
                 // read(sd, str3, sizeof(str3));
                 // printf("%s", str3);
                 // continue;continue;
+            } 
+            else if(customerResponseModel.operation == VIEW_FEEDBACK){
+                int strSize;
+                read(sd, &strSize, sizeof(strSize));
+                char str[strSize];
+                read(sd, str, sizeof(str));
+                printf("%s\n", str);
             }
         }
         else if (strcmp(buffer, displayEmployeeMenu) == 0)

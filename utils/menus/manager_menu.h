@@ -3,8 +3,9 @@
 
 CustomerResponseModel printManagerMenu()
 {
-    printf("\n---Customer Menu Controls---\n");
+    printf("\n---Manager Menu Controls---\n");
     printf("1. Assign Loan to employee\n");
+    printf("2. View Feedbacks\n");
     printf("8. Logout\n");
     printf("9. Exit\n");
 
@@ -15,6 +16,10 @@ CustomerResponseModel printManagerMenu()
     if (choice == 1)
     {
         customerResponseModel.operation = ASSIGN_LOAN_TO_EMPLOYEE;
+    }
+    if (choice == 2)
+    {
+        customerResponseModel.operation = VIEW_FEEDBACK;
     }
     else if (choice == 8)
     {

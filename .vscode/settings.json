@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "loan_controller.h": "c",
+        "transaction_controller.h": "c"
+    }
+}

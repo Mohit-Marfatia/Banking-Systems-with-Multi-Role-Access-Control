@@ -69,6 +69,16 @@ int lockLoanDb(int fd, int lock_type)
     return fcntl(fd, F_SETLKW, &fl);
 }
 
+int lockFeedbackDb(int fd, int lockType)
+{
+    struct flock lock;
+    lock.l_type = lockType;
+    lock.l_whence = SEEK_SET;
+    lock.l_start = 0;
+    lock.l_len = 0;
+    return fcntl(fd, F_SETLKW, &lock);
+}
+
 void hidePasswordInput(char *password, int size)
 {
     struct termios oldt, newt;

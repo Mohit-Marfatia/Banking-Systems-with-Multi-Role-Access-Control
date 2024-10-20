@@ -23,9 +23,9 @@ UserAuthModel printAdminMenu(UserModel user)
     {
         printf("\n---Admin Menu Controls (Add New Customer/Employee)---\n");
         printf("1. Add an Admin\n");
-        printf("2. Add an Manager\n");
+        printf("2. Add a Manager\n");
         printf("3. Add an Employee\n");
-        printf("4. Add an Customer\n");
+        printf("4. Add a Customer\n");
         printf("8. Logout\n");
         printf("9. Exit\n");
         // int options;

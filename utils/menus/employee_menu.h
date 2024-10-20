@@ -4,7 +4,7 @@
 
 CustomerResponseModel printEmployeeMenu()
 {
-    printf("\n---Customer Menu Controls---\n");
+    printf("\n---Employee Menu Controls---\n");
     printf("1. Approve/Reject Loan\n");
     printf("8. Logout\n");
     printf("9. Exit\n");

@@ -14,9 +14,11 @@
 #include "models/user_auth_model.h"
 #include "models/response_model.h"
 #include "models/customer_response_model.h"
+#include "models/feedback_model.h"
 #include "helper/auth_controller.h"
 #include "helper/transaction_controller.h"
 #include "helper/loan_controller.h"
+#include "helper/feedback_controller.h"
 
 int main()
 {
@@ -249,6 +251,9 @@ int main()
                                         // write(clientSD, str, strlen(str) + 1);
                                         // continue;
                                     }
+                                    else if (customerResponseModel.operation == ADD_FEEDBACK){
+                                        addFeedback(userModel.user_id, customerResponseModel.customerResponse);
+                                    }
                                 }
                                 else if (userModel.role == MANAGER)
                                 {
@@ -276,7 +281,7 @@ int main()
                                         close(clientSD);
                                         continue;
                                     }
-                                    else if (customerResponseModel.operation = ASSIGN_LOAN_TO_EMPLOYEE)
+                                    else if (customerResponseModel.operation == ASSIGN_LOAN_TO_EMPLOYEE)
                                     {
                                         char *str = printAllLoans();
                                         int strSize = strlen(str) + 1;
@@ -301,6 +306,11 @@ int main()
                                         // write(clientSD, str, strlen(str) + 1);
                                         // continue;
                                         // continue;
+                                    } else if(customerResponseModel.operation == VIEW_FEEDBACK){
+                                         char *str = printAllFeedbacks();
+                                        int strSize = strlen(str) + 1;
+                                        write(clientSD, &strSize, sizeof(strSize));
+                                        write(clientSD, str, strlen(str) + 1);
                                     }
                                 }
                                 else if (userModel.role == EMPLOYEE)

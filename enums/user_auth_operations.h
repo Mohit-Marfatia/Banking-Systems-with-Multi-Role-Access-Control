@@ -21,6 +21,7 @@ typedef enum
     ADD_FEEDBACK,
     ASSIGN_LOAN_TO_EMPLOYEE,
     APPROVE_REJECT_LOAN,
+    VIEW_FEEDBACK,
     ERROR,
     LOGOUT,
     EXIT
@@ -64,6 +65,8 @@ const char *getOperationName(UserOperations opr)
         return "APPROVE_REJECT_LOAN";
     case ADD_FEEDBACK:
         return "ADD_FEEDBACK";
+    case VIEW_FEEDBACK:
+        return "VIEW_FEEDBACK";
     case LOGOUT:
         return "LOGOUT";
     case EXIT:

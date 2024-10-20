@@ -8,7 +8,7 @@
 
 typedef struct customerResponseModel
 {
-    char customerResponse[100];
+    char customerResponse[1024];
     UserOperations operation;
 } CustomerResponseModel;
 
