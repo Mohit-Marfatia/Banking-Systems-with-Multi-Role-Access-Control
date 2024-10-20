@@ -9,7 +9,7 @@
 typedef struct userAuthModel
 {
     UserModel user;
-    UserAuthOperations operation;
+    UserOperations operation;
 } UserAuthModel;
 
 // Convert UserAuthModel to string
@@ -31,6 +31,6 @@ void userAuthModelFromString(const char *input, UserAuthModel *authModel)
     sscanf(input, "%499[^,],%d", userString, &operation);
 
     userModelFromString(userString, &authModel->user);
-    authModel->operation = (UserAuthOperations)operation;
+    authModel->operation = (UserOperations)operation;
 }
 #endif

@@ -1,5 +1,5 @@
-#ifndef USER_AUTH_OPERATIONS_H
-#define USER_AUTH_OPERATIONS_H
+#ifndef USER_OPERATIONS_H
+#define USER_OPERATIONS_H
 
 typedef enum
 {
@@ -12,17 +12,24 @@ typedef enum
     MODIFY_MANAGER,
     MODIFY_EMPLOYEE,
     MODIFY_CUSTOMER,
+    VIEW_BALANCE,
+    DEPOSIT_MONEY,
+    WITHDRAW_MONEY,
+    APPLY_LOAN,
+    ADD_FEEDBACK,
     ERROR,
     LOGOUT,
     EXIT
-} UserAuthOperations;
+} UserOperations;
 
-const char *getOperationName(UserAuthOperations opr)
+const char *getOperationName(UserOperations opr)
 {
     switch (opr)
     {
     case LOGIN:
         return "LOGIN";
+    case MODIFY_CUSTOMER:
+        return "MODIFY_CUSTOMER";
     case ADD_ADMIN:
         return "ADD_ADMIN";
     case ADD_MANAGER:
@@ -37,8 +44,16 @@ const char *getOperationName(UserAuthOperations opr)
         return "MODIFY_MANAGER";
     case MODIFY_EMPLOYEE:
         return "MODIFY_EMPLOYEE";
-    case MODIFY_CUSTOMER:
-        return "MODIFY_CUSTOMER";
+    case VIEW_BALANCE:
+        return "VIEW_BALANCE";
+    case DEPOSIT_MONEY:
+        return "DEPOSIT_MONEY";
+    case WITHDRAW_MONEY:
+        return "WITHDRAW_MONEY";
+    case APPLY_LOAN:
+        return "APPLY_LOAN";
+    case ADD_FEEDBACK:
+        return "ADD_FEEDBACK";
     case LOGOUT:
         return "LOGOUT";
     case EXIT:

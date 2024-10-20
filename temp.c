@@ -35,18 +35,23 @@ int main() {
 
     // user.user_id = -1;
     // user.accStatus = ACTIVATED;
-    // user.role = ADMIN;
-    // strcpy(user.username, "admin1");
-    // strcpy(user.password, "admin1");
+    // user.role = CUSTOMER;
+    // strcpy(user.username, "cus1");
+    // strcpy(user.password, "cus1");
     // user.isLoggedIn = false;
 
     // createUser(user);
 
     readAllUsers();
-    readAllAdmin();
-    readAllManagers();
-    readAllEmployees();
-    readAllCustomers();
-    readAllAccounts();
+    // readAllAdmin();
+    // readAllManagers();
+    // readAllEmployees();
+    // readAllCustomers();
+    // readAllAccounts();
+    // printf("\n");
+    // printf("%d", getAccountIdFromUserId(1, SAVINGS));
+    // printf("\n");
+    // char *accountStr = readAccountsOfUserId(1);
+    // printf("%s\n", accountStr);
     return 0;
 }

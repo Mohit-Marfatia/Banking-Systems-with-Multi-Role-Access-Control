@@ -13,6 +13,7 @@
 #include "utils/constants.h"
 #include "models/user_auth_model.h"
 #include "models/response_model.h"
+#include "models/customer_response_model.h"
 #include "helper/auth_controller.h"
 
 int main()
@@ -170,6 +171,37 @@ int main()
                                         write(clientSD, &updateResponse, sizeof(ResponseModel));
 
                                     }
+                                }
+                                else if(userModel.role == CUSTOMER){
+                                    write(clientSD, displayCustomerMenu, strlen(displayCustomerMenu) + 1);
+                                    CustomerResponseModel customerResponseModel;
+                                    read(clientSD, &customerResponseModel, sizeof(customerResponseModel));  
+                                    if (customerResponseModel.operation == ERROR)
+                                    {
+                                        continue;
+                                    }
+                                    else if (customerResponseModel.operation == LOGOUT)
+                                    {
+                                        logout(userModel.user_id, userModel);
+                                        printf("\n Logout Successful!\n");
+                                        userLoggedIn = false;
+                                        continue;
+                                    }
+                                    else if (customerResponseModel.operation == EXIT)
+                                    {
+                                        logout(userModel.user_id, userModel);
+                                        userLoggedIn = false;
+                                        flag = false;
+                                        printf("Client Exited successfully.\n");
+                                        close(clientSD);
+                                        continue;
+                                    } else if(customerResponseModel.operation == VIEW_BALANCE){
+                                        char *str = readAccountsOfUserId(userModel.user_id);
+                                        int strSize = strlen(str)+1;
+                                        write(clientSD, &strSize, sizeof(strSize));
+                                        write(clientSD, str, strlen(str) +1);
+                                    }
+
                                 }
                             }
                         }

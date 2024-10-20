@@ -32,16 +32,19 @@ int lockRecordDbInfo(int fd, int lock_type)
     return fcntl(fd, F_SETLKW, &fl);
 }
 
-int lockRecordAccountDb(int fd, int id, int lock_type)
+int lockRecordAccountDb(int fd, int lock_type)
 {
     struct flock fl;
     fl.l_type = lock_type;
     fl.l_whence = SEEK_SET;
-    fl.l_start = id * sizeof(AccountModel);
-    fl.l_len = sizeof(AccountModel);
-    fl.l_pid = getpid();
+    fl.l_start = 0;
+    fl.l_len = 0;
 
-    return fcntl(fd, F_SETLKW, &fl);
+      int result = fcntl(fd, F_SETLKW, &fl);
+    if (result == -1) {
+        perror("Error during fcntl");
+    }
+    return result;
 }
 
 void hidePasswordInput(char *password, int size)

@@ -11,8 +11,10 @@
 #include "utils/constants.h"
 #include "utils/menus/user_login_menu.h"
 #include "utils/menus/admin_menu.h"
+#include "utils/menus/customer_menu.h"
 #include "models/user_auth_model.h"
 #include "models/response_model.h"
+#include "models/customer_response_model.h"
 #include "helper/auth_controller.h"
 
 int main()
@@ -80,7 +82,7 @@ int main()
             {
                 continue;
             }
-            if (userAuthModel.operation == EXIT)
+            else if (userAuthModel.operation == EXIT)
             {
                 flag = false;
                 break;
@@ -120,6 +122,33 @@ int main()
 
                 printf("%s\n", updateResponse.responseMessage);
             }
+        }
+        else if (strcmp(buffer, displayCustomerMenu) == 0){
+            CustomerResponseModel customerResponseModel = printCustomerMenu();
+             write(sd, &customerResponseModel, sizeof(customerResponseModel));
+             if (customerResponseModel.operation == ERROR)
+            {
+                continue;
+            }
+            else if (customerResponseModel.operation == LOGOUT)
+            {
+                continue;
+            }
+            else if (customerResponseModel.operation == EXIT)
+            {
+                flag = false;
+                continue;
+            }
+            else if (customerResponseModel.operation == VIEW_BALANCE){
+                
+                int strSize;
+                read(sd, &strSize, sizeof(strSize));
+                char str[strSize];
+                read(sd, str, sizeof(str));
+                printf("%s", str);
+            }
+
+
         }
     }
 

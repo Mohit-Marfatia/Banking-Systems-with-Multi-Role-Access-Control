@@ -9,6 +9,8 @@ const char *exitApplication = "exitApplication";
 
 const char *displayAdminMenu = "displayAdminMenu";
 
+const char *displayCustomerMenu = "displayCustomerMenu";
+
 const char *userDatabase = "db/user/user_database.bin";
 
 const char *dbInformationDatabase = "db/db_information_database.bin";
