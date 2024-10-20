@@ -8,7 +8,7 @@ typedef enum
     MANAGER,
     EMPLOYEE,
     CUSTOMER,
-    ALL 
+    ALL
 } UserRole;
 
 const char *getRoleName(UserRole role)

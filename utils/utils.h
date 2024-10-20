@@ -40,8 +40,9 @@ int lockAccountDb(int fd, int lock_type)
     fl.l_start = 0;
     fl.l_len = 0;
 
-      int result = fcntl(fd, F_SETLKW, &fl);
-    if (result == -1) {
+    int result = fcntl(fd, F_SETLKW, &fl);
+    if (result == -1)
+    {
         perror("Error during fcntl");
     }
     return result;

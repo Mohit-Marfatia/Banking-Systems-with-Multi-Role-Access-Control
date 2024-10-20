@@ -102,11 +102,13 @@ ResponseModel getUserId(UserAuthModel userAuthModel)
     return responseModel;
 }
 
-int getCustomerId(char *str){
+int getCustomerId(char *str)
+{
 
     UserIdModel user;
     int fd = open(customerDatabase, O_RDWR | O_CREAT, 0666), id;
-     if (fd < 0){
+    if (fd < 0)
+    {
         perror("Error opening file");
         return -1;
     }
@@ -119,7 +121,6 @@ int getCustomerId(char *str){
             break;
         }
     }
-
 
     if (id == -1)
     {
@@ -400,7 +401,8 @@ int createUser(UserModel user)
 
     close(fd3);
     // Create Savings Account of customer
-    if(user.role == CUSTOMER) createAccount(user.user_id, SAVINGS);
+    if (user.role == CUSTOMER)
+        createAccount(user.user_id, SAVINGS);
     return 0;
 }
 
@@ -423,7 +425,7 @@ ResponseModel login(int userId, UserModel userModel)
         close(fd);
         return responseModel;
     }
-    
+
     // printUserModel(userModel);
     // Append user data to the file
     lseek(fd, userId * sizeof(UserModel), SEEK_SET);
@@ -444,21 +446,23 @@ ResponseModel login(int userId, UserModel userModel)
 
         responseModel.statusCode = 400;
         strcpy(responseModel.responseMessage, "Account has been disabled!");
-         return responseModel;
+        return responseModel;
     }
     else if (user.isLoggedIn == true)
     {
 
         responseModel.statusCode = 400;
         strcpy(responseModel.responseMessage, "Maximum amount of logins has been reached!");
-         return responseModel;
+        return responseModel;
     }
     else if (strcmp(user.password, userModel.password) == 0)
     {
         responseModel.statusCode = 200;
         strcpy(responseModel.responseMessage, "Login successful!");
-         return responseModel;
-    } else {
+        return responseModel;
+    }
+    else
+    {
         responseModel.statusCode = 400;
         strcpy(responseModel.responseMessage, "Username or password incorrect. Try again!");
         return responseModel;

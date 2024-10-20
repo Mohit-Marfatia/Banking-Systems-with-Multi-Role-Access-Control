@@ -178,7 +178,8 @@ UserAuthModel printAdminMenu(UserModel user)
         }
 
         return userAuthModel;
-    } else if (choice == 2 && user.role == ADMIN)
+    }
+    else if (choice == 2 && user.role == ADMIN)
     {
         printf("\n---Admin Menu Controls (Modify Customer/Employee details)---\n");
         printf("1. Modify Manager Details\n");
@@ -246,7 +247,9 @@ UserAuthModel printAdminMenu(UserModel user)
         userAuthModel.user = user;
         // printUserModel(userAuthModel.user);
         return userAuthModel;
-    } else {
+    }
+    else
+    {
         userAuthModel.operation = ERROR;
         return userAuthModel;
     }

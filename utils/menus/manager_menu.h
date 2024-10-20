@@ -37,14 +37,16 @@ CustomerResponseModel printManagerMenu()
     return customerResponseModel;
 }
 
-int getEmployeeIdForLoanAssignment(){
+int getEmployeeIdForLoanAssignment()
+{
     printf("Choose one of the employees to assign the loan: ");
     int choice;
     scanf("%d", &choice);
     return choice;
 }
 
-int getLoanIdForLoanAssignment(){
+int getLoanIdForLoanAssignment()
+{
     printf("Choose one of the pending loans: ");
     int choice;
     scanf("%d", &choice);

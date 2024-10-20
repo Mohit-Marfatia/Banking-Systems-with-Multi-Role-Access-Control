@@ -33,16 +33,18 @@ CustomerResponseModel printEmployeeMenu()
     return customerResponseModel;
 }
 
-int getLoanIdForApproval(){
+int getLoanIdForApproval()
+{
     printf("Choose one of the pending loans: ");
     int choice;
     scanf("%d", &choice);
     return choice;
 }
 
-LoanStatus loanApproval(){
+LoanStatus loanApproval()
+{
     printf("Press 1 to APPROVE and 2 to REJECT:");
     int choice;
     scanf("%d", &choice);
-    return choice == 1? APPROVED : REJECTED;
+    return choice == 1 ? APPROVED : REJECTED;
 }

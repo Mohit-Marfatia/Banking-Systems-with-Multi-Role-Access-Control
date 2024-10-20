@@ -65,7 +65,7 @@ int applyForLoan(int user_id, int loan_amount)
     // Unlock and close the file
     lockTransactionDb(fd, F_UNLCK);
     close(fd);
-    
+
     DbInformationModel model;
     int fd2 = open(dbInformationDatabase, O_RDWR);
     lockRecordDbInfo(fd2, F_WRLCK);
@@ -278,7 +278,7 @@ int addLoanAccount(int loanId)
     }
 
     // Open the account database to search for an existing loan account
-    fd = open(accountDatabase, O_RDWR, 0600);  // Changed from O_APPEND to O_RDWR
+    fd = open(accountDatabase, O_RDWR, 0600); // Changed from O_APPEND to O_RDWR
     if (fd == -1)
     {
         perror("Error opening account database");
@@ -330,7 +330,7 @@ int addLoanAccount(int loanId)
         account.account_id = getNewAccountId();
         account.user_id = user_id;
         account.accType = LOAN;
-        account.balance = -1 * loan_amount; 
+        account.balance = -1 * loan_amount;
 
         if (write(fd, &account, sizeof(AccountModel)) == -1)
         {
@@ -348,7 +348,6 @@ int addLoanAccount(int loanId)
 
     return loan_amount;
 }
-
 
 void readAllLoans()
 {

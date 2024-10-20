@@ -27,7 +27,8 @@ int getNewTransactionId()
     return id;
 }
 
-void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType, TransactionType transactionType) {
+void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType, TransactionType transactionType)
+{
     int fromAccId = getAccountIdFromUserId(fromUserId, accType);
     int toAccId = getAccountIdFromUserId(toUserId, accType);
     int transactionId = getNewTransactionId();
@@ -37,15 +38,16 @@ void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType
 
     TransactionModel transaction;
     transaction.transaction_id = transactionId;
-    transaction.account_id = fromAccId; // Account ID from which the transaction is made
+    transaction.account_id = fromAccId;  // Account ID from which the transaction is made
     transaction.fromUserId = fromUserId; // Keep user ID for the transaction record
-    transaction.toUserId = toUserId; // Only needed for transfer
+    transaction.toUserId = toUserId;     // Only needed for transfer
     transaction.amount = amount;
     transaction.transactionType = transactionType;
 
     // Open the account database to read and write
     int fd = open(accountDatabase, O_RDWR);
-    if (fd == -1) {
+    if (fd == -1)
+    {
         perror("Error opening accounts database");
         return;
     }
@@ -58,34 +60,45 @@ void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType
     lseek(fd, 0, SEEK_SET);
     printf("---debug---\n fromAccId: %d\n", fromAccId);
     // Read through the accounts to find the relevant accounts
-    while (read(fd, &account, sizeof(AccountModel)) == sizeof(AccountModel)) {
+    while (read(fd, &account, sizeof(AccountModel)) == sizeof(AccountModel))
+    {
         // Check for the from account
-        if (account.account_id == fromAccId) {
+        if (account.account_id == fromAccId)
+        {
             fromAccountFound = true;
 
-            if (transactionType == WITHDRAWAL) {
+            if (transactionType == WITHDRAWAL)
+            {
                 // Check if sufficient balance is available
-                if (account.balance >= amount) {
+                if (account.balance >= amount)
+                {
                     account.balance -= amount; // Deduct the amount for withdrawal
                     fromAccModel.account_id = account.account_id;
                     fromAccModel.user_id = account.user_id;
                     fromAccModel.balance = account.balance;
                     fromAccModel.accType = account.accType;
-                } else {
+                }
+                else
+                {
                     printf("Insufficient balance for withdrawal.\n");
                     lockAccountDb(fd, F_UNLCK);
                     close(fd);
                     return; // Exit if not enough balance
                 }
-            } else if (transactionType == TRANSFER) {
+            }
+            else if (transactionType == TRANSFER)
+            {
                 // Check if sufficient balance is available
-                if (account.balance >= amount) {
+                if (account.balance >= amount)
+                {
                     account.balance -= amount; // Deduct the amount for transfer
                     fromAccModel.account_id = account.account_id;
                     fromAccModel.user_id = account.user_id;
                     fromAccModel.balance = account.balance;
                     fromAccModel.accType = account.accType;
-                } else {
+                }
+                else
+                {
                     printf("Insufficient balance for transfer. balance: %d transfer: %d\n", account.balance, amount);
                     lockAccountDb(fd, F_UNLCK);
                     close(fd);
@@ -95,20 +108,23 @@ void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType
         }
 
         // Check for the to account only if it's a transfer or deposit
-        if (transactionType == TRANSFER && account.account_id == toAccId) {
+        if (transactionType == TRANSFER && account.account_id == toAccId)
+        {
             toAccountFound = true;
             account.balance += amount; // Add the amount to the to account
-                    toAccModel.account_id = account.account_id;
-                    toAccModel.user_id = account.user_id;
-                    toAccModel.balance = account.balance;
-                    toAccModel.accType = account.accType;
-        } else if (transactionType == DEPOSIT && account.account_id == toAccId) {
+            toAccModel.account_id = account.account_id;
+            toAccModel.user_id = account.user_id;
+            toAccModel.balance = account.balance;
+            toAccModel.accType = account.accType;
+        }
+        else if (transactionType == DEPOSIT && account.account_id == toAccId)
+        {
             toAccountFound = true;
             account.balance += amount; // Add the amount to the deposit account
-                    toAccModel.account_id = account.account_id;
-                    toAccModel.user_id = account.user_id;
-                    toAccModel.balance = account.balance;
-                    toAccModel.accType = account.accType;
+            toAccModel.account_id = account.account_id;
+            toAccModel.user_id = account.user_id;
+            toAccModel.balance = account.balance;
+            toAccModel.accType = account.accType;
         }
     }
 
@@ -116,7 +132,8 @@ void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType
     lockAccountDb(fd, F_UNLCK);
 
     // If the transfer account is not found, print an error message
-    if (transactionType == TRANSFER && !toAccountFound) {
+    if (transactionType == TRANSFER && !toAccountFound)
+    {
         printf("Recipient account not found.\n");
         close(fd);
         return;
@@ -124,15 +141,18 @@ void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType
 
     // Write the updated account records back to the database
     lseek(fd, 0, SEEK_SET);
-    while (read(fd, &account, sizeof(AccountModel)) == sizeof(AccountModel)) {
-        if ((transactionType == WITHDRAWAL && account.account_id == fromAccId) || 
-            (transactionType == TRANSFER && account.account_id == fromAccId)){
+    while (read(fd, &account, sizeof(AccountModel)) == sizeof(AccountModel))
+    {
+        if ((transactionType == WITHDRAWAL && account.account_id == fromAccId) ||
+            (transactionType == TRANSFER && account.account_id == fromAccId))
+        {
             lseek(fd, -sizeof(AccountModel), SEEK_CUR); // Move back to overwrite
             write(fd, &fromAccModel, sizeof(AccountModel));
         }
-            if((transactionType == TRANSFER && account.account_id == toAccId) || 
-            (transactionType == DEPOSIT && account.account_id == toAccId)) {
-            lseek(fd, -sizeof(AccountModel), SEEK_CUR); // Move back to overwrite
+        if ((transactionType == TRANSFER && account.account_id == toAccId) ||
+            (transactionType == DEPOSIT && account.account_id == toAccId))
+        {
+            lseek(fd, -sizeof(AccountModel), SEEK_CUR);   // Move back to overwrite
             write(fd, &toAccModel, sizeof(AccountModel)); // Write the updated account back
 
             break; // Break after updating the necessary accounts
@@ -140,8 +160,9 @@ void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType
     }
 
     // Log the transaction
-    int logFd = open(transactionDatabase, O_WRONLY| O_CREAT, 0644);
-    if (logFd == -1) {
+    int logFd = open(transactionDatabase, O_WRONLY | O_CREAT, 0644);
+    if (logFd == -1)
+    {
         perror("Error opening transaction database");
         close(fd);
         return;
@@ -149,7 +170,8 @@ void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType
     lseek(logFd, 0, SEEK_END);
     perror("error seeking:");
     // Write the transaction to the file
-    if (write(logFd, &transaction, sizeof(TransactionModel)) != sizeof(TransactionModel)) {
+    if (write(logFd, &transaction, sizeof(TransactionModel)) != sizeof(TransactionModel))
+    {
         perror("Error writing transaction to database");
     }
 
@@ -190,15 +212,16 @@ void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType
     lockRecordDbInfo(fd2, F_UNLCK);
     close(fd2);
 
-
     close(logFd);
     close(fd);
 }
 
-void readAllTransaction() {
+void readAllTransaction()
+{
     TransactionModel transaction;
     int fd = open(transactionDatabase, O_RDONLY, 0600);
-    if (fd == -1) {
+    if (fd == -1)
+    {
         perror("Error opening transaction database");
         return;
     }
@@ -211,7 +234,8 @@ void readAllTransaction() {
     printf("-------------------------------------------------------------------------------\n");
 
     // Read the file record by record
-    while (read(fd, &transaction, sizeof(TransactionModel)) == sizeof(TransactionModel)) {
+    while (read(fd, &transaction, sizeof(TransactionModel)) == sizeof(TransactionModel))
+    {
         // perror("read error");
         // Display the transaction details
         // printf("%s", getTransactionType(transaction.transactionType));
@@ -277,8 +301,8 @@ char *readTransactionsOfUserId(int userId)
 
     // Append header to the buffer
     content_length += snprintf(str + content_length, current_size - content_length,
-                               "\n%-15s %-15s %-15s %-15s %-20s %-10s\n", 
-                               "TransactionID", "AccountID", "FromUserID", "ToUserID", 
+                               "\n%-15s %-15s %-15s %-15s %-20s %-10s\n",
+                               "TransactionID", "AccountID", "FromUserID", "ToUserID",
                                "TransactionType", "Amount");
 
     // Append the separator
@@ -293,7 +317,7 @@ char *readTransactionsOfUserId(int userId)
     {
         perror("Failed to allocate memory for transactions");
         free(str);
-        lockTransactionDb(fd, F_UNLCK);// Unlock before returning
+        lockTransactionDb(fd, F_UNLCK); // Unlock before returning
         close(fd);
         return NULL;
     }
@@ -312,7 +336,7 @@ char *readTransactionsOfUserId(int userId)
                 {
                     perror("Failed to reallocate memory for transactions");
                     free(str);
-        lockTransactionDb(fd, F_UNLCK);// Unlock before returning
+                    lockTransactionDb(fd, F_UNLCK); // Unlock before returning
                     close(fd);
                     return NULL;
                 }
@@ -322,7 +346,7 @@ char *readTransactionsOfUserId(int userId)
     }
 
     // Unlock the transaction database
-        lockTransactionDb(fd, F_UNLCK);
+    lockTransactionDb(fd, F_UNLCK);
     close(fd);
 
     // Sort the transactions by transaction ID in reverse order
@@ -353,7 +377,7 @@ char *readTransactionsOfUserId(int userId)
                                    t.account_id,
                                    t.fromUserId,
                                    t.toUserId,
-                                   getTransactionType(t.transactionType),  // Convert enum to string
+                                   getTransactionType(t.transactionType), // Convert enum to string
                                    t.amount);
     }
 

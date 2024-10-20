@@ -19,7 +19,7 @@ const char *getTransactionType(TransactionType type)
     case TRANSFER:
         return "TRANSFER";
     default:
-        return "UNKNOWN";  // Handle invalid/undefined transaction types
+        return "UNKNOWN";
     }
 }
 

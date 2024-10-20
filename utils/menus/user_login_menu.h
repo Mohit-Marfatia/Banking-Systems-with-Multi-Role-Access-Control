@@ -83,10 +83,12 @@ UserAuthModel userLoginDetails()
         strcpy(newUser.username, username);
         strcpy(newUser.password, password);
 
-            userAuthModel.user = newUser;
+        userAuthModel.user = newUser;
 
-            return userAuthModel;
-    } else{
+        return userAuthModel;
+    }
+    else
+    {
         userAuthModel.operation = ERROR;
         return userAuthModel;
     }

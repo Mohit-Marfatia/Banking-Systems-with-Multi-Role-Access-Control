@@ -50,7 +50,7 @@ int addFeedback(int userId, const char *feedbackMessage)
     feedback.feedback_id = getNewFeedbackId();
     feedback.user_id = userId;
     strncpy(feedback.feedback_message, feedbackMessage, sizeof(feedback.feedback_message) - 1);
-    feedback.feedback_message[sizeof(feedback.feedback_message) - 1] = '\0';  // Ensure null termination
+    feedback.feedback_message[sizeof(feedback.feedback_message) - 1] = '\0'; // Ensure null termination
 
     // Write the feedback to the database
     if (write(fd, &feedback, sizeof(FeedbackModel)) == -1)
@@ -105,7 +105,7 @@ int addFeedback(int userId, const char *feedbackMessage)
     }
     lockRecordDbInfo(fd2, F_UNLCK);
     close(fd2);
-    return feedback.feedback_id;  // Return the feedback ID
+    return feedback.feedback_id; // Return the feedback ID
 }
 
 // Function to list all feedbacks
@@ -138,12 +138,12 @@ int compareFeedbackIds(const void *a, const void *b)
 {
     FeedbackModel *feedbackA = (FeedbackModel *)a;
     FeedbackModel *feedbackB = (FeedbackModel *)b;
-    return feedbackB->feedback_id - feedbackA->feedback_id; 
+    return feedbackB->feedback_id - feedbackA->feedback_id;
 }
 
 char *printAllFeedbacks()
 {
-     FeedbackModel feedback;
+    FeedbackModel feedback;
     int fd = open(feedbackDatabase, O_RDONLY, 0600);
 
     if (fd == -1)
@@ -182,7 +182,7 @@ char *printAllFeedbacks()
 
     // Append header to the buffer
     content_length += snprintf(str + content_length, current_size - content_length,
-                               "\n%-15s %-15s %-s\n", 
+                               "\n%-15s %-15s %-s\n",
                                "FeedbackID", "UserID", "FeedbackMessage");
 
     // Append the separator
@@ -234,7 +234,7 @@ char *printAllFeedbacks()
         FeedbackModel f = feedbacks[i];
 
         // Ensure there is enough space in the string buffer to append the new feedback data
-        size_t needed_size = content_length + 100 + strlen(f.feedback_message);  // Estimate required space
+        size_t needed_size = content_length + 100 + strlen(f.feedback_message); // Estimate required space
         if (needed_size >= current_size)
         {
             current_size = needed_size * 2; // Double the buffer size based on the need
@@ -260,6 +260,5 @@ char *printAllFeedbacks()
 
     return str;
 }
-
 
 #endif

@@ -22,7 +22,7 @@ int getNewAccountId()
     read(fd, &model, sizeof(model));
 
     id = model.accountCount + 1;
-    
+
     lockRecordDbInfo(fd, F_UNLCK);
     close(fd);
     return id;
@@ -43,7 +43,7 @@ int getAccountIdFromUserId(int userId, AccountType accType)
     if (lockAccountDb(fd, F_RDLCK) == -1)
     {
         perror("Error locking accounts file");
-        close(fd);  // Always close the file if an error occurs
+        close(fd); // Always close the file if an error occurs
         return -1;
     }
 
@@ -52,7 +52,7 @@ int getAccountIdFromUserId(int userId, AccountType accType)
     {
         perror("Error seeking accounts file");
         lockAccountDb(fd, F_UNLCK);
-        close(fd);  // Always close the file if an error occurs
+        close(fd); // Always close the file if an error occurs
         return -1;
     }
 
@@ -72,11 +72,12 @@ int getAccountIdFromUserId(int userId, AccountType accType)
         perror("Error unlocking accounts file");
     }
 
-    close(fd);  // Close the file at the end
+    close(fd); // Close the file at the end
     return accId;
 }
 
-AccountModel getAccountModelFromAccountId(int accId){
+AccountModel getAccountModelFromAccountId(int accId)
+{
     AccountModel accModel, account;
 
     int fd = open(accountDatabase, O_RDONLY);
@@ -90,7 +91,7 @@ AccountModel getAccountModelFromAccountId(int accId){
     if (lockAccountDb(fd, F_RDLCK) == -1)
     {
         perror("Error locking accounts file");
-        close(fd);  // Always close the file if an error occurs
+        close(fd); // Always close the file if an error occurs
         // return -1;
     }
 
@@ -99,7 +100,7 @@ AccountModel getAccountModelFromAccountId(int accId){
     {
         perror("Error seeking accounts file");
         lockAccountDb(fd, F_UNLCK);
-        close(fd);  // Always close the file if an error occurs
+        close(fd); // Always close the file if an error occurs
         // return -1;
     }
 
@@ -119,7 +120,7 @@ AccountModel getAccountModelFromAccountId(int accId){
         perror("Error unlocking accounts file");
     }
 
-    close(fd);  
+    close(fd);
     return accModel;
 }
 
@@ -143,7 +144,8 @@ char *readAccountsOfUserId(int userId)
 
     // Dynamically allocate memory for the string
     char *str = (char *)malloc(initial_size * sizeof(char));
-    if (str == NULL) {
+    if (str == NULL)
+    {
         perror("Failed to allocate memory");
         return NULL;
     }
@@ -154,20 +156,24 @@ char *readAccountsOfUserId(int userId)
     // Append header to the buffer
     content_length += snprintf(str + content_length, current_size - content_length,
                                "\n%-10s %-10s %-15s %-10s\n", "AccountID", "UserID", "AccountType", "Balance");
-    
+
     // Append the separator
     content_length += snprintf(str + content_length, current_size - content_length,
                                "----------------------------------------------\n");
 
     // Loop through the accounts and append each matching account to the buffer
-    while (read(fd, &account, sizeof(AccountModel)) == sizeof(AccountModel)) {
-        if (account.user_id == userId) { // Only display relevant records
+    while (read(fd, &account, sizeof(AccountModel)) == sizeof(AccountModel))
+    {
+        if (account.user_id == userId)
+        { // Only display relevant records
 
             // Ensure there is enough space to append the new account data
-            if (content_length + 100 >= current_size) {
+            if (content_length + 100 >= current_size)
+            {
                 current_size *= 2; // Double the buffer size
                 str = (char *)realloc(str, current_size * sizeof(char));
-                if (str == NULL) {
+                if (str == NULL)
+                {
                     perror("Failed to reallocate memory");
                     return NULL;
                 }
@@ -262,7 +268,6 @@ void createAccount(int user_id, AccountType accType)
     }
     lockRecordDbInfo(fd2, F_UNLCK);
     close(fd2);
-
 }
 
 void readAllAccounts()

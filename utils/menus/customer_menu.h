@@ -64,12 +64,13 @@ CustomerResponseModel printCustomerMenu()
         scanf("%s", str);
         strcpy(customerResponseModel.customerResponse, str);
     }
-    else if(choice == 7){
+    else if (choice == 7)
+    {
         customerResponseModel.operation = ADD_FEEDBACK;
         char str[1024];
         printf("Enter your feedback: \n");
-        scanf(" %[^\n]", str); 
-        // fgets(customerResponseModel.customerResponse, sizeof(customerResponseModel.customerResponse), stdin); 
+        scanf(" %[^\n]", str);
+        // fgets(customerResponseModel.customerResponse, sizeof(customerResponseModel.customerResponse), stdin);
         strcpy(customerResponseModel.customerResponse, str);
     }
     else if (choice == 8)
