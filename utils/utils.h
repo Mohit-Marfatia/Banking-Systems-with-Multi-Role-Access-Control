@@ -32,7 +32,7 @@ int lockRecordDbInfo(int fd, int lock_type)
     return fcntl(fd, F_SETLKW, &fl);
 }
 
-int lockRecordAccountDb(int fd, int lock_type)
+int lockAccountDb(int fd, int lock_type)
 {
     struct flock fl;
     fl.l_type = lock_type;
@@ -47,7 +47,18 @@ int lockRecordAccountDb(int fd, int lock_type)
     return result;
 }
 
-int lockRecordTransactionDb(int fd, int lock_type)
+int lockTransactionDb(int fd, int lock_type)
+{
+    struct flock fl;
+    fl.l_type = lock_type;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = 0;
+    fl.l_len = 0;
+
+    return fcntl(fd, F_SETLKW, &fl);
+}
+
+int lockLoanDb(int fd, int lock_type)
 {
     struct flock fl;
     fl.l_type = lock_type;

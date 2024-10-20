@@ -1,7 +1,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#define PORTNO 5060
+#define PORTNO 5061
 
 const char *displayUserLogin = "displayUserLogin";
 
@@ -26,6 +26,8 @@ const char *customerDatabase = "db/user/customer_database.bin";
 const char *accountDatabase = "db/account_database.bin";
 
 const char *transactionDatabase = "db/transaction_database.bin";
+
+const char *loanDatabase = "db/loan_database.bin";
 
 const char *printAdminUsers = "printAdminUsers";
 

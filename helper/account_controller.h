@@ -40,7 +40,7 @@ int getAccountIdFromUserId(int userId, AccountType accType)
     AccountModel account;
     int accId = -1;
     // Lock the account file
-    if (lockRecordAccountDb(fd, F_RDLCK) == -1)
+    if (lockAccountDb(fd, F_RDLCK) == -1)
     {
         perror("Error locking accounts file");
         close(fd);  // Always close the file if an error occurs
@@ -51,7 +51,7 @@ int getAccountIdFromUserId(int userId, AccountType accType)
     if (lseek(fd, 0, SEEK_SET) == -1)
     {
         perror("Error seeking accounts file");
-        lockRecordAccountDb(fd, F_UNLCK);
+        lockAccountDb(fd, F_UNLCK);
         close(fd);  // Always close the file if an error occurs
         return -1;
     }
@@ -67,7 +67,7 @@ int getAccountIdFromUserId(int userId, AccountType accType)
     }
 
     // Unlock the file and close it
-    if (lockRecordAccountDb(fd, F_UNLCK) == -1)
+    if (lockAccountDb(fd, F_UNLCK) == -1)
     {
         perror("Error unlocking accounts file");
     }
@@ -87,7 +87,7 @@ AccountModel getAccountModelFromAccountId(int accId){
     }
 
     // Lock the account file
-    if (lockRecordAccountDb(fd, F_RDLCK) == -1)
+    if (lockAccountDb(fd, F_RDLCK) == -1)
     {
         perror("Error locking accounts file");
         close(fd);  // Always close the file if an error occurs
@@ -98,7 +98,7 @@ AccountModel getAccountModelFromAccountId(int accId){
     if (lseek(fd, 0, SEEK_SET) == -1)
     {
         perror("Error seeking accounts file");
-        lockRecordAccountDb(fd, F_UNLCK);
+        lockAccountDb(fd, F_UNLCK);
         close(fd);  // Always close the file if an error occurs
         // return -1;
     }
@@ -114,7 +114,7 @@ AccountModel getAccountModelFromAccountId(int accId){
     }
 
     // Unlock the file and close it
-    if (lockRecordAccountDb(fd, F_UNLCK) == -1)
+    if (lockAccountDb(fd, F_UNLCK) == -1)
     {
         perror("Error unlocking accounts file");
     }

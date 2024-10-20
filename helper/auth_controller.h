@@ -1,5 +1,5 @@
-#ifndef AUTHCONTROLLER_H
-#define AUTHCONTROLLER_H
+#ifndef AUTH_CONTROLLER_H
+#define AUTH_CONTROLLER_H
 
 #include <stdio.h>
 #include <string.h>

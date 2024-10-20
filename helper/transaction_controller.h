@@ -54,7 +54,7 @@ void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType
     bool toAccountFound = false;
 
     // Lock the account database for reading
-    lockRecordAccountDb(fd, F_RDLCK);
+    lockAccountDb(fd, F_RDLCK);
     lseek(fd, 0, SEEK_SET);
     printf("---debug---\n fromAccId: %d\n", fromAccId);
     // Read through the accounts to find the relevant accounts
@@ -73,7 +73,7 @@ void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType
                     fromAccModel.accType = account.accType;
                 } else {
                     printf("Insufficient balance for withdrawal.\n");
-                    lockRecordAccountDb(fd, F_UNLCK);
+                    lockAccountDb(fd, F_UNLCK);
                     close(fd);
                     return; // Exit if not enough balance
                 }
@@ -87,7 +87,7 @@ void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType
                     fromAccModel.accType = account.accType;
                 } else {
                     printf("Insufficient balance for transfer. balance: %d transfer: %d\n", account.balance, amount);
-                    lockRecordAccountDb(fd, F_UNLCK);
+                    lockAccountDb(fd, F_UNLCK);
                     close(fd);
                     return; // Exit if not enough balance
                 }
@@ -113,7 +113,7 @@ void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType
     }
 
     // Unlock the account database
-    lockRecordAccountDb(fd, F_UNLCK);
+    lockAccountDb(fd, F_UNLCK);
 
     // If the transfer account is not found, print an error message
     if (transactionType == TRANSFER && !toAccountFound) {
@@ -248,7 +248,7 @@ char *readTransactionsOfUserId(int userId)
     }
 
     // Lock the transaction database for reading
-    if (lockRecordTransactionDb(fd, F_RDLCK) == -1)
+    if (lockTransactionDb(fd, F_RDLCK) == -1)
     {
         perror("Error locking transaction database");
         close(fd);
@@ -267,7 +267,7 @@ char *readTransactionsOfUserId(int userId)
     if (str == NULL)
     {
         perror("Failed to allocate memory");
-        lockRecordTransactionDb(fd, F_UNLCK); // Unlock before returning
+        lockTransactionDb(fd, F_UNLCK); // Unlock before returning
         close(fd);
         return NULL;
     }
@@ -293,7 +293,7 @@ char *readTransactionsOfUserId(int userId)
     {
         perror("Failed to allocate memory for transactions");
         free(str);
-        lockRecordTransactionDb(fd, F_UNLCK);// Unlock before returning
+        lockTransactionDb(fd, F_UNLCK);// Unlock before returning
         close(fd);
         return NULL;
     }
@@ -312,7 +312,7 @@ char *readTransactionsOfUserId(int userId)
                 {
                     perror("Failed to reallocate memory for transactions");
                     free(str);
-        lockRecordTransactionDb(fd, F_UNLCK);// Unlock before returning
+        lockTransactionDb(fd, F_UNLCK);// Unlock before returning
                     close(fd);
                     return NULL;
                 }
@@ -322,7 +322,7 @@ char *readTransactionsOfUserId(int userId)
     }
 
     // Unlock the transaction database
-        lockRecordTransactionDb(fd, F_UNLCK);
+        lockTransactionDb(fd, F_UNLCK);
     close(fd);
 
     // Sort the transactions by transaction ID in reverse order

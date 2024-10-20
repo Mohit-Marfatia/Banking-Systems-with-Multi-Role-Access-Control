@@ -16,6 +16,7 @@
 #include "models/customer_response_model.h"
 #include "helper/auth_controller.h"
 #include "helper/transaction_controller.h"
+#include "helper/loan_controller.h"
 
 int main()
 {
@@ -224,6 +225,15 @@ int main()
                                         int strSize = strlen(str)+1;
                                         write(clientSD, &strSize, sizeof(strSize));
                                         write(clientSD, str, strlen(str) +1);
+                                    } else if(customerResponseModel.operation == APPLY_LOAN){
+                                        char str[100];
+                                        strcpy(str, customerResponseModel.customerResponse);
+                                        int amount = atoi(str);
+                                        int apply = applyForLoan(userModel.user_id, amount);
+                                        if(apply == 0) strcpy(str, "Loan Applied successfully!\n"); 
+                                        else strcpy(str, "Something went wrong! Try again later\n");
+                                        write(clientSD, str, strlen(str) +1);
+                                        continue;
                                     } 
 
                                 }

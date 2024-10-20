@@ -149,6 +149,11 @@ int main()
                 char str[strSize];
                 read(sd, str, sizeof(str));
                 printf("%s", str);
+            } else if(customerResponseModel.operation == APPLY_LOAN){
+                char str[100];
+                read(sd, str, sizeof(str));
+                printf("%s", str);
+                continue;
             }
         }
     }

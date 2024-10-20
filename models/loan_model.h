@@ -13,6 +13,7 @@ typedef struct loanModel
     int user_id;
     LoanStatus loanStatus;
     int loan_amount;
+    int employee_assigned;
 } LoanModel;
 
 #endif
