@@ -21,7 +21,7 @@ UserAuthModel userLoginDetails()
         printf("Enter username: ");
         scanf("%s", username);
         hidePasswordInput(password, sizeof(password));
-
+        newUser.isLoggedIn = false;
         newUser.user_id = -1;
         newUser.role = CUSTOMER;
         strcpy(newUser.username, username);

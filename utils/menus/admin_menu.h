@@ -177,16 +177,6 @@ UserAuthModel printAdminMenu(UserModel user)
             return userAuthModel;
         }
 
-        // char username[100];
-        // printf("Enter the correct username of the user you want to modify: ");
-        // scanf("%s", username);
-
-        // strcpy(newUser.username, username);
-        // strcpy(newUser.password, "");
-        // newUser.user_id = -1;
-        // newUser.accStatus = ACTIVATED;
-        // newUser.isLoggedIn = false;
-        // userAuthModel.user = newUser;
         return userAuthModel;
     } else if (choice == 2 && user.role == ADMIN)
     {

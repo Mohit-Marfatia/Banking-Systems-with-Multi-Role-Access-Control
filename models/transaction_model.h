@@ -10,6 +10,8 @@ typedef struct transactionModel
 {
     int transaction_id;
     int account_id;
+    int fromUserId;
+    int toUserId;
     TransactionType transactionType;
     int amount;
 } TransactionModel;

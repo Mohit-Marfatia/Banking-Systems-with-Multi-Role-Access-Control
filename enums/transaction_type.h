@@ -4,7 +4,8 @@
 typedef enum
 {
     DEPOSIT,
-    WITHDRAWAL
+    WITHDRAWAL,
+    TRANSFER
 } TransactionType;
 
 const char *getTransactionType(TransactionType type)
@@ -15,6 +16,10 @@ const char *getTransactionType(TransactionType type)
         return "DEPOSIT";
     case WITHDRAWAL:
         return "WITHDRAWAL";
+    case TRANSFER:
+        return "TRANSFER";
+    default:
+        return "UNKNOWN";  // Handle invalid/undefined transaction types
     }
 }
 

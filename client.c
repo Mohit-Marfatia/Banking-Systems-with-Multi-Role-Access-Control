@@ -41,10 +41,12 @@ int main()
         memset(buffer, 0, sizeof(buffer));
         read(sd, buffer, sizeof(buffer));
 
-                // printf("%s | %s\n", buffer, displayUserLogin);
+        // printf("%s | %s\n", buffer, displayUserLogin);
         if (strcmp(buffer, displayUserLogin) == 0)
         {
             userAuthModel = userLoginDetails();
+            // printf("--debug--\n");
+            // printf("%s\n", userAuthModel.user.isLoggedIn ? "true":"false");
             user = userAuthModel.user;
 
             write(sd, &userAuthModel, sizeof(userAuthModel));
@@ -94,7 +96,7 @@ int main()
                 printf("%s", addUserResponseModel.responseMessage);
             }
             else if (userAuthModel.operation == MODIFY_ADMIN || userAuthModel.operation == MODIFY_MANAGER || userAuthModel.operation == MODIFY_EMPLOYEE || userAuthModel.operation == MODIFY_CUSTOMER)
-            {   
+            {
                 memset(buffer, 0, sizeof(buffer));
                 read(sd, buffer, sizeof(buffer));
                 // printf("%s | %s\n", buffer, printManagerUsers);
@@ -123,10 +125,11 @@ int main()
                 printf("%s\n", updateResponse.responseMessage);
             }
         }
-        else if (strcmp(buffer, displayCustomerMenu) == 0){
+        else if (strcmp(buffer, displayCustomerMenu) == 0)
+        {
             CustomerResponseModel customerResponseModel = printCustomerMenu();
-             write(sd, &customerResponseModel, sizeof(customerResponseModel));
-             if (customerResponseModel.operation == ERROR)
+            write(sd, &customerResponseModel, sizeof(customerResponseModel));
+            if (customerResponseModel.operation == ERROR)
             {
                 continue;
             }
@@ -139,16 +142,15 @@ int main()
                 flag = false;
                 continue;
             }
-            else if (customerResponseModel.operation == VIEW_BALANCE){
-                
+            else if (customerResponseModel.operation == VIEW_BALANCE)
+            {
+
                 int strSize;
                 read(sd, &strSize, sizeof(strSize));
                 char str[strSize];
                 read(sd, str, sizeof(str));
                 printf("%s", str);
             }
-
-
         }
     }
 

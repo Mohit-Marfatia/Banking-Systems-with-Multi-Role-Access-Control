@@ -15,6 +15,7 @@
 #include "models/response_model.h"
 #include "models/customer_response_model.h"
 #include "helper/auth_controller.h"
+#include "helper/transaction_controller.h"
 
 int main()
 {
@@ -88,6 +89,7 @@ int main()
                     {
                         int userId = atoi(responseModel.serverMessage);
                         userModel.user_id = userId;
+                        //  printf("id---%d\n", userId);
                         ResponseModel loginResponse = login(userId, userModel);
                         if (loginResponse.statusCode == 400)
                         {
@@ -176,6 +178,7 @@ int main()
                                     write(clientSD, displayCustomerMenu, strlen(displayCustomerMenu) + 1);
                                     CustomerResponseModel customerResponseModel;
                                     read(clientSD, &customerResponseModel, sizeof(customerResponseModel));  
+                                    printf("\nOpr: %s\n", getOperationName(customerResponseModel.operation));
                                     if (customerResponseModel.operation == ERROR)
                                     {
                                         continue;
@@ -200,6 +203,22 @@ int main()
                                         int strSize = strlen(str)+1;
                                         write(clientSD, &strSize, sizeof(strSize));
                                         write(clientSD, str, strlen(str) +1);
+                                    } else if(customerResponseModel.operation == DEPOSIT_MONEY){
+                                        char str[10];
+                                        strcpy(str, customerResponseModel.customerResponse);
+                                        int amount = atoi(str);
+                                        transactMoney(userModel.user_id, userModel.user_id, amount, SAVINGS, DEPOSIT);
+                                    } else if(customerResponseModel.operation == WITHDRAW_MONEY){
+                                        char str[10];
+                                        strcpy(str, customerResponseModel.customerResponse);
+                                        int amount = atoi(str);
+                                        transactMoney(userModel.user_id, userModel.user_id, amount, SAVINGS, WITHDRAWAL);
+                                    } else if(customerResponseModel.operation == TRANSACT_MONEY){
+                                        char str[100], str2[10];
+                                        sscanf(customerResponseModel.customerResponse, "%s %s", str, str2);
+                                        int toCustomer = getCustomerId(str);
+                                        int amount = atoi(str2);
+                                        transactMoney(userModel.user_id, toCustomer, amount, SAVINGS, TRANSFER);
                                     }
 
                                 }

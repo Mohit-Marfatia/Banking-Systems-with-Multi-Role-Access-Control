@@ -5,6 +5,7 @@
 #include "models/db_information_model.h"
 #include "helper/auth_controller.h"
 #include "helper/account_controller.h"
+#include "helper/transaction_controller.h"
 
 int main() {
     
@@ -42,12 +43,22 @@ int main() {
 
     // createUser(user);
 
-    readAllUsers();
+    // user.user_id = -1;
+    // user.accStatus = ACTIVATED;
+    // user.role = CUSTOMER;
+    // strcpy(user.username, "cus2");
+    // strcpy(user.password, "cus2");
+    // user.isLoggedIn = false;
+
+    // createUser(user);
+
+    // readAllUsers();
     // readAllAdmin();
     // readAllManagers();
     // readAllEmployees();
     // readAllCustomers();
     // readAllAccounts();
+    readAllTransaction();
     // printf("\n");
     // printf("%d", getAccountIdFromUserId(1, SAVINGS));
     // printf("\n");

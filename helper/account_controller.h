@@ -22,7 +22,7 @@ int getNewAccountId()
     read(fd, &model, sizeof(model));
 
     id = model.accountCount + 1;
-
+    
     lockRecordDbInfo(fd, F_UNLCK);
     close(fd);
     return id;
@@ -38,7 +38,7 @@ int getAccountIdFromUserId(int userId, AccountType accType)
     }
 
     AccountModel account;
-    int accId = -2;
+    int accId = -1;
     // Lock the account file
     if (lockRecordAccountDb(fd, F_RDLCK) == -1)
     {
@@ -74,6 +74,53 @@ int getAccountIdFromUserId(int userId, AccountType accType)
 
     close(fd);  // Close the file at the end
     return accId;
+}
+
+AccountModel getAccountModelFromAccountId(int accId){
+    AccountModel accModel, account;
+
+    int fd = open(accountDatabase, O_RDONLY);
+    if (fd == -1)
+    {
+        perror("Error opening accounts file");
+        // return -1;
+    }
+
+    // Lock the account file
+    if (lockRecordAccountDb(fd, F_RDLCK) == -1)
+    {
+        perror("Error locking accounts file");
+        close(fd);  // Always close the file if an error occurs
+        // return -1;
+    }
+
+    // Move to the beginning of the file
+    if (lseek(fd, 0, SEEK_SET) == -1)
+    {
+        perror("Error seeking accounts file");
+        lockRecordAccountDb(fd, F_UNLCK);
+        close(fd);  // Always close the file if an error occurs
+        // return -1;
+    }
+
+    // Read through the file record by record
+    while (read(fd, &account, sizeof(AccountModel)) == sizeof(AccountModel))
+    {
+        if (account.account_id == accId)
+        {
+            accModel = account;
+            break;
+        }
+    }
+
+    // Unlock the file and close it
+    if (lockRecordAccountDb(fd, F_UNLCK) == -1)
+    {
+        perror("Error unlocking accounts file");
+    }
+
+    close(fd);  
+    return accModel;
 }
 
 char *readAccountsOfUserId(int userId)
@@ -178,6 +225,44 @@ void createAccount(int user_id, AccountType accType)
     // Unlock and close the file
     lockRecordDbInfo(fd, F_UNLCK);
     close(fd);
+
+    DbInformationModel model;
+    int fd2 = open(dbInformationDatabase, O_RDWR);
+    lockRecordDbInfo(fd2, F_WRLCK);
+    if (fd2 < 0)
+    {
+        perror("Error opening user information database");
+    }
+
+    if (lseek(fd2, 0, SEEK_SET) == -1)
+    {
+        perror("Error seeking in user information database");
+        close(fd2);
+    }
+
+    if (read(fd2, &model, sizeof(DbInformationModel)) != sizeof(DbInformationModel))
+    {
+        perror("Error reading from user information database");
+        close(fd2);
+    }
+
+    model.accountCount++;
+
+    // Write updated model back to the file
+    if (lseek(fd2, 0, SEEK_SET) == -1)
+    {
+        perror("Error seeking to start of user information database");
+        close(fd2);
+    }
+
+    if (write(fd2, &model, sizeof(DbInformationModel)) != sizeof(DbInformationModel))
+    {
+        perror("Error writing to user information database");
+        close(fd2);
+    }
+    lockRecordDbInfo(fd2, F_UNLCK);
+    close(fd2);
+
 }
 
 void readAllAccounts()

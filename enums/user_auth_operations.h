@@ -15,6 +15,7 @@ typedef enum
     VIEW_BALANCE,
     DEPOSIT_MONEY,
     WITHDRAW_MONEY,
+    TRANSACT_MONEY,
     APPLY_LOAN,
     ADD_FEEDBACK,
     ERROR,
@@ -50,6 +51,8 @@ const char *getOperationName(UserOperations opr)
         return "DEPOSIT_MONEY";
     case WITHDRAW_MONEY:
         return "WITHDRAW_MONEY";
+    case TRANSACT_MONEY:
+        return "TRANSACT_MONEY";
     case APPLY_LOAN:
         return "APPLY_LOAN";
     case ADD_FEEDBACK:

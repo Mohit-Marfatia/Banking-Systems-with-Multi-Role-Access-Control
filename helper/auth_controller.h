@@ -74,14 +74,19 @@ ResponseModel getUserId(UserAuthModel userAuthModel)
         return responseModel;
     }
 
+    // printf("----@debug---\n");;
+    // printf("%d | %s\n", userModel.user_id, userModel.username);
     while (read(fd, &user, sizeof(UserIdModel)) == sizeof(UserIdModel))
     {
+
         if (strcmp(user.username, userModel.username) == 0)
         {
             id = user.user_id;
             break;
         }
     }
+
+    // printf("id---%d\n", id);
 
     if (id == -1)
     {
@@ -95,6 +100,35 @@ ResponseModel getUserId(UserAuthModel userAuthModel)
         strcpy(responseModel.serverMessage, str);
     }
     return responseModel;
+}
+
+int getCustomerId(char *str){
+
+    UserIdModel user;
+    int fd = open(customerDatabase, O_RDWR | O_CREAT, 0666), id;
+     if (fd < 0){
+        perror("Error opening file");
+        return -1;
+    }
+    while (read(fd, &user, sizeof(UserIdModel)) == sizeof(UserIdModel))
+    {
+
+        if (strcmp(user.username, str) == 0)
+        {
+            id = user.user_id;
+            break;
+        }
+    }
+
+
+    if (id == -1)
+    {
+        printf("Customer not found\n");
+    }
+    else
+    {
+        return id;
+    }
 }
 
 int getUserIdInformation(UserRole role)
@@ -219,6 +253,7 @@ int createUser(UserModel user)
 {
     user.user_id = getUserIdInformation(ALL);
     user.isLoggedIn = false;
+    user.accStatus = ACTIVATED;
 
     // Open user database file
     int fd = open(userDatabase, O_RDWR | O_CREAT, 0666);
@@ -388,9 +423,10 @@ ResponseModel login(int userId, UserModel userModel)
         close(fd);
         return responseModel;
     }
-
+    
+    // printUserModel(userModel);
     // Append user data to the file
-    lseek(fd, userId, SEEK_SET);
+    lseek(fd, userId * sizeof(UserModel), SEEK_SET);
     if (read(fd, &user, sizeof(UserModel)) != sizeof(UserModel))
     {
         strcpy(responseModel.responseMessage, "Error reading file");
@@ -401,26 +437,34 @@ ResponseModel login(int userId, UserModel userModel)
 
     lockRecordUserDb(fd, userId, F_UNLCK);
     close(fd);
-
+    // printUserModel(user);
+    // printf("----debug----\n");
     if (user.accStatus == DEACTIVATED)
     {
 
         responseModel.statusCode = 400;
         strcpy(responseModel.responseMessage, "Account has been disabled!");
+         return responseModel;
     }
     else if (user.isLoggedIn == true)
     {
 
         responseModel.statusCode = 400;
         strcpy(responseModel.responseMessage, "Maximum amount of logins has been reached!");
+         return responseModel;
     }
     else if (strcmp(user.password, userModel.password) == 0)
     {
         responseModel.statusCode = 200;
         strcpy(responseModel.responseMessage, "Login successful!");
+         return responseModel;
+    } else {
+        responseModel.statusCode = 400;
+        strcpy(responseModel.responseMessage, "Username or password incorrect. Try again!");
+        return responseModel;
     }
 
-    return responseModel;
+    // return responseModel;
 }
 
 ResponseModel updateUser(int userId, UserModel userModel)
@@ -484,12 +528,6 @@ UserModel getUserModelFromId(int userId)
 
     return userModel;
 }
-
-void changeRole(UserModel userModel, UserRole userRole)
-{
-    int fd = open(userDatabase, O_RDWR, 0660);
-}
-
 ResponseModel logout(int userId, UserModel userModel)
 {
     ResponseModel responseModel;
@@ -630,7 +668,7 @@ void readAllCustomers()
     {
         if (user.user_id != -1)
         { // Only display records that are not marked as deleted
-
+            // printf("%d | %s\n", user.user_id, user.username);
             userModel = getUserModelFromId(user.user_id);
             printf("%-10d %-20s %-15s %-10s %-10s\n",
                    userModel.user_id,
