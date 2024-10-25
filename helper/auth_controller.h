@@ -143,7 +143,7 @@ int getUserIdInformation(UserRole role)
     switch (role)
     {
     case ALL:
-        printf("total users:%d\n", model.totalUsers);
+        // printf("total users:%d\n", model.totalUsers);
         return model.totalUsers;
     case ADMIN:
         return model.adminCount;
@@ -256,7 +256,6 @@ int createUser(UserModel user)
     user.isLoggedIn = false;
     user.accStatus = ACTIVATED;
 
-    // Open user database file
     int fd = open(userDatabase, O_RDWR | O_CREAT, 0666);
     if (fd < 0)
     {
@@ -264,7 +263,6 @@ int createUser(UserModel user)
         return -1;
     }
 
-    // Lock the record for writing
     if (lockRecordUserDb(fd, user.user_id, F_WRLCK) == -1)
     {
         perror("Error locking user database");
@@ -272,7 +270,6 @@ int createUser(UserModel user)
         return -1;
     }
 
-    // Append user data to the end of the file
     if (lseek(fd, 0, SEEK_END) == -1)
     {
         perror("Error seeking to end of user database");
@@ -287,11 +284,9 @@ int createUser(UserModel user)
         return -1;
     }
 
-    // Unlock and close user database file
     lockRecordUserDb(fd, user.user_id, F_UNLCK);
     close(fd);
 
-    // Update the user information model
     DbInformationModel model;
     int fd2 = open(dbInformationDatabase, O_RDWR);
     lockRecordDbInfo(fd2, F_WRLCK);
@@ -315,7 +310,6 @@ int createUser(UserModel user)
         return -1;
     }
 
-    // Update the role-specific count and total user count
     switch (user.role)
     {
     case ADMIN:
@@ -353,7 +347,6 @@ int createUser(UserModel user)
     lockRecordDbInfo(fd2, F_UNLCK);
     close(fd2);
 
-    // Add user to the specific role-based database
     int fd3;
     UserIdModel idModel;
     switch (user.role)
@@ -381,7 +374,6 @@ int createUser(UserModel user)
         return -1;
     }
 
-    // Append user ID and username to the role-specific database
     if (lseek(fd3, 0, SEEK_END) == -1)
     {
         perror("Error seeking to end of role-specific database");
@@ -474,6 +466,55 @@ ResponseModel login(int userId, UserModel userModel)
 ResponseModel updateUser(int userId, UserModel userModel)
 {
     ResponseModel responseModel;
+    if (strcmp(userModel.username, "dummy") == 0)
+    {
+        userModel.user_id = -1;
+        int fd3;
+        UserIdModel idModel;
+        switch (userModel.role)
+        {
+        case ADMIN:
+            fd3 = open(adminDatabase, O_RDWR | O_CREAT, 0666);
+            break;
+        case MANAGER:
+            fd3 = open(managerDatabase, O_RDWR | O_CREAT, 0666);
+            break;
+        case EMPLOYEE:
+            fd3 = open(employeeDatabase, O_RDWR | O_CREAT, 0666);
+            break;
+        case CUSTOMER:
+            fd3 = open(customerDatabase, O_RDWR | O_CREAT, 0666);
+            break;
+        default:
+            fd3 = -1;
+            break;
+        }
+
+        if (fd3 < 0)
+        {
+            perror("Error opening role-specific database");
+            // return -1;
+        }
+
+        if (lseek(fd3, 0, SEEK_END) == -1)
+        {
+            perror("Error seeking to end of role-specific database");
+            close(fd3);
+            // return -1;
+        }
+        lseek(fd3, 0, SEEK_SET);
+        while (read(fd3, &idModel, sizeof(idModel)) == sizeof(idModel))
+        {
+            if(idModel.user_id == userId){
+                idModel.user_id = -1;
+                strcpy(idModel.username,"dummy");
+                lseek(fd3, -1*sizeof(idModel), SEEK_CUR);
+                write(fd3, &idModel, sizeof(idModel));
+                break;
+            }
+        }
+        close(fd3);
+    }
     int fd = open(userDatabase, O_RDWR);
     if (fd < 0)
     {
@@ -490,7 +531,6 @@ ResponseModel updateUser(int userId, UserModel userModel)
         return responseModel;
     }
 
-    // Append user data to the file
     lseek(fd, userId * sizeof(UserModel), SEEK_SET);
     if (write(fd, &userModel, sizeof(UserModel)) != sizeof(UserModel))
     {
@@ -643,7 +683,7 @@ void readAllEmployees()
     {
         if (user.user_id != -1)
         { // Only display records that are not marked as deleted
-
+            printf("%s\n", user.username);
             userModel = getUserModelFromId(user.user_id);
             printf("%-10d %-20s %-15s %-10s %-10s\n",
                    userModel.user_id,

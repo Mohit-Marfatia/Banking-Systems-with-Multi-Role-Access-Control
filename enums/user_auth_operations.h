@@ -22,6 +22,7 @@ typedef enum
     ASSIGN_LOAN_TO_EMPLOYEE,
     APPROVE_REJECT_LOAN,
     VIEW_FEEDBACK,
+    CHANGE_PASSWORD,
     ERROR,
     LOGOUT,
     EXIT
@@ -44,7 +45,7 @@ const char *getOperationName(UserOperations opr)
     case ADD_CUSTOMER:
         return "ADD_CUSTOMER";
     case MODIFY_ADMIN:
-        return "ADD_ADMIN";
+        return "MODIFY_ADMIN";
     case MODIFY_MANAGER:
         return "MODIFY_MANAGER";
     case MODIFY_EMPLOYEE:
@@ -57,6 +58,8 @@ const char *getOperationName(UserOperations opr)
         return "WITHDRAW_MONEY";
     case TRANSACT_MONEY:
         return "TRANSACT_MONEY";
+    case VIEW_TRANSACTION_HISTORY:
+        return "VIEW_TRANSACTION_HISTORY";
     case APPLY_LOAN:
         return "APPLY_LOAN";
     case ASSIGN_LOAN_TO_EMPLOYEE:
@@ -67,6 +70,10 @@ const char *getOperationName(UserOperations opr)
         return "ADD_FEEDBACK";
     case VIEW_FEEDBACK:
         return "VIEW_FEEDBACK";
+    case CHANGE_PASSWORD:
+        return "CHANGE_PASSWORD";
+    case ERROR:
+        return "ERROR";
     case LOGOUT:
         return "LOGOUT";
     case EXIT:

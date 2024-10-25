@@ -266,8 +266,6 @@ UserModel modifyUserDetails()
     printf("1. Modify User Role\n");
     printf("2. Change Password\n");
     printf("3. Activate/Deactivate\n");
-    printf("8. Logout\n");
-    printf("9. Exit\n");
     int options;
 
     printf("Enter your choice: ");
@@ -282,7 +280,7 @@ UserModel modifyUserDetails()
         ResponseModel response = updateUser(userModel.user_id, userModel);
         strcpy(userModel.username, temp);
         printf("\n---Admin Menu Controls (Modify Customer/Employee details)---\n");
-        printf(" Modify User Role to:\n");
+        printf("Modify User Role to:\n");
         printf("1. Admin\n");
         printf("2. Manager\n");
         printf("3. Employee\n");
@@ -309,7 +307,8 @@ UserModel modifyUserDetails()
             break;
         }
         int create = createUser(userModel);
-        userModel.user_id = -1;
+        // userModel.user_id = -1;
+        userModel.accStatus = DEACTIVATED;
         strcpy(userModel.username, "dummy");
         break;
     case 2:

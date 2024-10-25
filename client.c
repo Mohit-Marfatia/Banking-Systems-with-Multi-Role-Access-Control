@@ -95,7 +95,7 @@ int main()
             {
                 ResponseModel addUserResponseModel;
                 read(sd, &addUserResponseModel, sizeof(addUserResponseModel));
-                printf("%s", addUserResponseModel.responseMessage);
+                printf("%s\n", addUserResponseModel.responseMessage);
             }
             else if (userAuthModel.operation == MODIFY_ADMIN || userAuthModel.operation == MODIFY_MANAGER || userAuthModel.operation == MODIFY_EMPLOYEE || userAuthModel.operation == MODIFY_CUSTOMER)
             {
@@ -196,13 +196,19 @@ int main()
                 // read(sd, str3, sizeof(str3));
                 // printf("%s", str3);
                 // continue;continue;
-            } 
+            }
             else if(customerResponseModel.operation == VIEW_FEEDBACK){
                 int strSize;
                 read(sd, &strSize, sizeof(strSize));
                 char str[strSize];
                 read(sd, str, sizeof(str));
                 printf("%s\n", str);
+            } 
+            else if(customerResponseModel.operation == CHANGE_PASSWORD){
+
+                ResponseModel updateResponse;
+                read(sd, &updateResponse, sizeof(ResponseModel));
+                printf("%s\n", updateResponse.responseMessage);
             }
         }
         else if (strcmp(buffer, displayEmployeeMenu) == 0)
@@ -221,7 +227,18 @@ int main()
             {
                 flag = false;
                 continue;
-            } 
+            }  
+            else if(customerResponseModel.operation == CHANGE_PASSWORD){
+
+                ResponseModel updateResponse;
+                read(sd, &updateResponse, sizeof(ResponseModel));
+
+                printf("%s\n", updateResponse.responseMessage);
+            }
+            else if(customerResponseModel.operation == MODIFY_CUSTOMER){
+                UserModel user = modifyCustomerDetails();
+                write(sd, &user, sizeof(UserModel));
+            }
             else if(customerResponseModel.operation == APPROVE_REJECT_LOAN){
                 int strSize;
                 read(sd, &strSize, sizeof(strSize));
@@ -232,6 +249,13 @@ int main()
                 write(sd, &loanId, sizeof(loanId));
                 LoanStatus approve = loanApproval();
                 write(sd, &approve, sizeof(approve));
+            }
+            else if(customerResponseModel.operation == VIEW_TRANSACTION_HISTORY){
+                int strSize;
+                read(sd, &strSize, sizeof(strSize));
+                char str[strSize];
+                read(sd, str, sizeof(str));
+                printf("%s", str);
             }
         }
     }

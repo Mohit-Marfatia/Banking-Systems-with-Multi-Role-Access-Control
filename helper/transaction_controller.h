@@ -58,7 +58,7 @@ void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType
     // Lock the account database for reading
     lockAccountDb(fd, F_RDLCK);
     lseek(fd, 0, SEEK_SET);
-    printf("---debug---\n fromAccId: %d\n", fromAccId);
+    // printf("---debug---\n fromAccId: %d\n", fromAccId);
     // Read through the accounts to find the relevant accounts
     while (read(fd, &account, sizeof(AccountModel)) == sizeof(AccountModel))
     {
@@ -168,7 +168,7 @@ void transactMoney(int fromUserId, int toUserId, int amount, AccountType accType
         return;
     }
     lseek(logFd, 0, SEEK_END);
-    perror("error seeking:");
+    // perror("error seeking:");
     // Write the transaction to the file
     if (write(logFd, &transaction, sizeof(TransactionModel)) != sizeof(TransactionModel))
     {
@@ -271,7 +271,6 @@ char *readTransactionsOfUserId(int userId)
         return NULL;
     }
 
-    // Lock the transaction database for reading
     if (lockTransactionDb(fd, F_RDLCK) == -1)
     {
         perror("Error locking transaction database");
@@ -279,14 +278,12 @@ char *readTransactionsOfUserId(int userId)
         return NULL;
     }
 
-    // Move to the beginning of the file
     lseek(fd, 0, SEEK_SET);
 
-    size_t initial_size = 512; // Initial size of the buffer
+    size_t initial_size = 512; 
     size_t current_size = initial_size;
     size_t content_length = 0;
 
-    // Dynamically allocate memory for the string
     char *str = (char *)malloc(initial_size * sizeof(char));
     if (str == NULL)
     {
@@ -296,16 +293,13 @@ char *readTransactionsOfUserId(int userId)
         return NULL;
     }
 
-    // Initialize the buffer
-    str[0] = '\0'; // Set the string to be empty initially
+    str[0] = '\0';
 
-    // Append header to the buffer
     content_length += snprintf(str + content_length, current_size - content_length,
                                "\n%-15s %-15s %-15s %-15s %-20s %-10s\n",
                                "TransactionID", "AccountID", "FromUserID", "ToUserID",
                                "TransactionType", "Amount");
 
-    // Append the separator
     content_length += snprintf(str + content_length, current_size - content_length,
                                "--------------------------------------------------------------------------\n");
 

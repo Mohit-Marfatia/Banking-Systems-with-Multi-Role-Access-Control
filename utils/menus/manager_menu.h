@@ -6,6 +6,7 @@ CustomerResponseModel printManagerMenu()
     printf("\n---Manager Menu Controls---\n");
     printf("1. Assign Loan to employee\n");
     printf("2. View Feedbacks\n");
+    printf("3. Change Password\n");
     printf("8. Logout\n");
     printf("9. Exit\n");
 
@@ -17,9 +18,18 @@ CustomerResponseModel printManagerMenu()
     {
         customerResponseModel.operation = ASSIGN_LOAN_TO_EMPLOYEE;
     }
-    if (choice == 2)
+    else if (choice == 2)
     {
         customerResponseModel.operation = VIEW_FEEDBACK;
+    }
+    else if (choice == 3)
+    {
+        customerResponseModel.operation = CHANGE_PASSWORD; 
+        printf("Enter new password: ");
+        
+        char password[100];
+        hidePasswordInput(password, sizeof(password));
+        strcpy(customerResponseModel.customerResponse, password);
     }
     else if (choice == 8)
     {

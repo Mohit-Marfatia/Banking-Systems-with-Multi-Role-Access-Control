@@ -75,13 +75,12 @@ int main()
                 else
                 {
                     // Print user details
-                    printf("\nRole: %s\n", getRoleName(userModel.role));
-                    printf("Username: %s\n", userModel.username);
-                    printf("Password: %s\n", userModel.password);
+                    // printf("");
+                    // printf("Password: %s\n", userModel.password);
 
                     ResponseModel responseModel = getUserId(userAuthModel);
                     // char serverMsg[100];
-                    printf("-----%d----\n", responseModel.statusCode);
+                    // printf("-----%d----\n", responseModel.statusCode);
                     // printf("-----------------%d------\n", userId);
                     if (responseModel.statusCode == 400)
                     {
@@ -90,6 +89,7 @@ int main()
                     }
                     else
                     {
+                        printf("\nRole: %s Username: %s logged in\n", getRoleName(userModel.role), userModel.username);
                         int userId = atoi(responseModel.serverMessage);
                         userModel.user_id = userId;
                         //  printf("id---%d\n", userId);
@@ -101,12 +101,11 @@ int main()
                         }
                         else
                         {
-                            printf("UserId: %d\n", userModel.user_id);
+                            // printf("UserId: %d\n", userModel.user_id);
                             userModel.accStatus = ACTIVATED;
                             userModel.isLoggedIn = true;
                             updateUser(userId, userModel);
                             strcpy(loginResponse.serverMessage, "");
-                            // readUsers(filename);
                             write(clientSD, &loginResponse, sizeof(loginResponse));
                             userLoggedIn = true;
 
@@ -143,10 +142,18 @@ int main()
                                     }
                                     else if (userAuthModel.operation == ADD_ADMIN || userAuthModel.operation == ADD_MANAGER || userAuthModel.operation == ADD_EMPLOYEE || userAuthModel.operation == ADD_CUSTOMER)
                                     {
-                                        createUser(userAuthModel.user);
+                                        int create = createUser(userAuthModel.user);
                                         ResponseModel addUserResponseModel;
-                                        strcpy(addUserResponseModel.responseMessage, "User Created Successfully");
-                                        addUserResponseModel.statusCode = 200;
+                                        if (create == 0)
+                                        {
+                                            strcpy(addUserResponseModel.responseMessage, "User Created Successfully");
+                                            addUserResponseModel.statusCode = 200;
+                                        }
+                                        else
+                                        {
+                                            strcpy(addUserResponseModel.responseMessage, "User Creation Failed. Try again!");
+                                            addUserResponseModel.statusCode = 400;
+                                        }
                                         write(clientSD, &addUserResponseModel, sizeof(addUserResponseModel));
                                     }
                                     else if (userAuthModel.operation == MODIFY_ADMIN || userAuthModel.operation == MODIFY_MANAGER || userAuthModel.operation == MODIFY_EMPLOYEE || userAuthModel.operation == MODIFY_CUSTOMER)
@@ -251,7 +258,8 @@ int main()
                                         // write(clientSD, str, strlen(str) + 1);
                                         // continue;
                                     }
-                                    else if (customerResponseModel.operation == ADD_FEEDBACK){
+                                    else if (customerResponseModel.operation == ADD_FEEDBACK)
+                                    {
                                         addFeedback(userModel.user_id, customerResponseModel.customerResponse);
                                     }
                                 }
@@ -306,11 +314,19 @@ int main()
                                         // write(clientSD, str, strlen(str) + 1);
                                         // continue;
                                         // continue;
-                                    } else if(customerResponseModel.operation == VIEW_FEEDBACK){
-                                         char *str = printAllFeedbacks();
+                                    }
+                                    else if (customerResponseModel.operation == VIEW_FEEDBACK)
+                                    {
+                                        char *str = printAllFeedbacks();
                                         int strSize = strlen(str) + 1;
                                         write(clientSD, &strSize, sizeof(strSize));
                                         write(clientSD, str, strlen(str) + 1);
+                                    }
+                                    else if (customerResponseModel.operation == CHANGE_PASSWORD)
+                                    {
+                                        strcpy(userModel.password, customerResponseModel.customerResponse);
+                                        ResponseModel updateResponse = updateUser(userModel.user_id, userModel);
+                                        write(clientSD, &updateResponse, sizeof(ResponseModel));
                                     }
                                 }
                                 else if (userModel.role == EMPLOYEE)
@@ -356,6 +372,47 @@ int main()
                                             int user_id = getUserIdFromLoanId(loanId);
                                             transactMoney(user_id, user_id, loan_amount, SAVINGS, DEPOSIT);
                                         }
+                                    }
+                                    else if (customerResponseModel.operation == CHANGE_PASSWORD)
+                                    {
+                                        strcpy(userModel.password, customerResponseModel.customerResponse);
+                                        ResponseModel updateResponse = updateUser(userModel.user_id, userModel);
+                                        write(clientSD, &updateResponse, sizeof(ResponseModel));
+                                    }
+                                    else if (customerResponseModel.operation == ADD_CUSTOMER)
+                                    {
+                                        char str[1024];
+                                        UserModel newCustomerModel;
+                                        userModelFromString(str, &newCustomerModel);
+
+                                        int create = createUser(userAuthModel.user);
+                                        ResponseModel addUserResponseModel;
+                                        if (create == 0)
+                                        {
+                                            strcpy(addUserResponseModel.responseMessage, "User Created Successfully");
+                                            addUserResponseModel.statusCode = 200;
+                                        }
+                                        else
+                                        {
+                                            strcpy(addUserResponseModel.responseMessage, "User Creation Failed. Try again!");
+                                            addUserResponseModel.statusCode = 400;
+                                        }
+                                        write(clientSD, &addUserResponseModel, sizeof(addUserResponseModel));
+                                    }
+                                    else if (customerResponseModel.operation == MODIFY_CUSTOMER)
+                                    {
+                                        UserModel modifiedCustomer;
+                                        read(clientSD, &modifiedCustomer, sizeof(UserModel));
+                                        updateUser(modifiedCustomer.user_id, modifiedCustomer);
+                                    }
+                                    else if(customerResponseModel.operation == VIEW_TRANSACTION_HISTORY){
+                                        // printf("----debug-----\n %s\n", customerResponseModel.customerResponse);
+                                        int userId = atoi(customerResponseModel.customerResponse);
+                                        char *str = readTransactionsOfUserId(userId);
+                                        int strSize = strlen(str) + 1;
+                                        // printf("----debug-----\n%d\n %s\n",strSize, str);
+                                        write(clientSD, &strSize, sizeof(strSize));
+                                        write(clientSD, str, strlen(str) + 1);
                                     }
                                 }
                             }

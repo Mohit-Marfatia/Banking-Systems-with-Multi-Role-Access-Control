@@ -89,11 +89,11 @@ int main() {
     // readAllAccounts();
     // readAllTransaction();
     // readAllLoans();
-    readAllFeedbacks();
+    // readAllFeedbacks();
     // printf("\n");
     // printf("%d", getAccountIdFromUserId(1, SAVINGS));
     // printf("\n");
-    // char *accountStr = readAccountsOfUserId(1);
-    // printf("%s\n", accountStr);
+    char *accountStr = readTransactionsOfUserId(1);
+    printf("%s\n", accountStr);
     return 0;
 }
