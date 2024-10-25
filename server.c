@@ -34,7 +34,7 @@ int main()
     server.sin_port = htons(PORTNO);
 
     bind(serverSD, (struct sockaddr *)(&server), sizeof(server));
-    listen(serverSD, 5);
+    listen(serverSD, 2);
     sz = sizeof(client);
 
     int choice, childPid;
